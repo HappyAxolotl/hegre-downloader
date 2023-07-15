@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hegre-downloader"
+authors = [{ name = "HappyAxolotl" }]
+description = "Downloader for Hegre.com"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Unlicense" }
+dependencies = [
+    "beautifulsoup4",
+    "python-dotenv",
+    "requests",
+    "argparse",
+    "rich",
+]
+dynamic = ["version"]
