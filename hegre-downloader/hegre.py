@@ -7,7 +7,6 @@ import requests
 
 from bs4 import BeautifulSoup
 from rich.progress import Progress, TaskID
-from rich.console import Console
 from enum import Enum
 from urllib.parse import urlparse
 from requests import HTTPError

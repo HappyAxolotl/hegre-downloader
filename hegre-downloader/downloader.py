@@ -1,15 +1,26 @@
-from dotenv import load_dotenv
 import os
 import sys
+import argparse
 
 from hegre import Hegre
 from exceptions import HegreError
 
+from dotenv import load_dotenv
 from rich.progress import Progress
 from rich.console import Console
 
+
 load_dotenv()
 console = Console()
+
+parser = argparse.ArgumentParser(
+    prog="hegre-downloader",
+    description="Downloader for hegre.com",
+)
+parser.add_argument(
+    "-d", "--destination", help="Destination folder", action="store", required=True
+)
+args = parser.parse_args()
 
 username = os.environ.get("username")
 password = os.environ.get("password")
@@ -41,7 +52,8 @@ with Progress() as p2:
     for movie in movies:
         hegre.fetch_movie_details(movie)
 
-        dest_folder = f"./downloads/{movie.date.year}"
+        dest_folder = os.path.join(args.destination, str(movie.date.year))
+
         if not os.path.exists(dest_folder):
             os.makedirs(dest_folder, exist_ok=True)
 
