@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hegre-downloader"
 authors = [{ name = "HappyAxolotl" }]
-description = "Downloader for Hegre.com"
+description = "Downloader for hegre.com"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Unlicense" }
