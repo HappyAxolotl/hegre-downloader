@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import json
 import requests
 
@@ -17,6 +18,7 @@ from exceptions import HegreError, MovieAlreadyDownloaded
 
 
 PARSER = "html.parser"
+MOVIE_PROGRESS = "[green] [{:>4} / {:>4}] Fetching movie URLs"
 
 
 class SortOptions(Enum):
@@ -82,14 +84,34 @@ class Hegre:
         else:
             raise HegreError("Could not extract authenticity_token from login page!")
 
-    def get_movies(
+    def resolve_urls(
         self,
+        url: str,
         sort: SortOptions = SortOptions.MOST_RECENT,
-        fetch_details: bool = False,
+        progress: Progress = None,
+    ) -> list[str]:
+        if re.match(r"^https?:\/\/www\.hegre\.com\/movies", url):
+            total = self.get_total_movie_count()
+            if progress:
+                task_id = progress.add_task(
+                    MOVIE_PROGRESS.format(0, total), total=total
+                )
+            return self.get_movie_urls(total, sort, progress, task_id)
+        elif re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage|sexed)\/", url):
+            return [url]
+        else:
+            raise HegreError(
+                "Unsupported URL! Only movies, films, massage and sexed are supported at the moment."
+            )
+
+    def get_movie_urls(
+        self,
+        total: int,
+        sort: SortOptions,
         progress: Progress = None,
         task_id: TaskID = None,
-    ) -> list[HegreMovie]:
-        movies: list[HegreMovie] = []
+    ) -> list[str]:
+        urls = []
         page = 1
 
         while True:
@@ -100,16 +122,25 @@ class Hegre:
             movies_page = BeautifulSoup(movies_page_res.text, PARSER)
 
             if len(movies_page.select(".hint")) < 1:
-                movies_on_page = self._parse_movies_page(movies_page, fetch_details)
-                movies.extend(movies_on_page)
-                page += 1
+                urls_on_page = []
+                for item in movies_page.select("#films-listing .item"):
+                    url = "https://www.hegre.com" + item.select_one("a").attrs["href"]
+                    urls_on_page.append(url)
+
+                urls.extend(urls_on_page)
 
                 if progress != None and task_id != None:
-                    progress.update(task_id, advance=len(movies_on_page))
+                    progress.update(
+                        task_id,
+                        advance=len(urls_on_page),
+                        description=MOVIE_PROGRESS.format(len(urls), total),
+                    )
+
+                page += 1
             else:
                 break
 
-        return movies
+        return urls
 
     def get_total_movie_count(self, sort: SortOptions = SortOptions.MOST_RECENT) -> int:
         movies_page_res = requests.get(
@@ -120,29 +151,14 @@ class Hegre:
         movies_page = BeautifulSoup(movies_page_res.text, PARSER)
         return int(movies_page.select_one("h2 strong").text)
 
-    def fetch_movie_details(self, movie: HegreMovie) -> None:
-        film_page_res = requests.get(movie.url, cookies=self._cookies)
+    def get_movie_from_url(self, url: str) -> HegreMovie:
+        if "login" not in self._session.cookies:
+            raise HegreError("No active session detected, please login first!")
+
+        film_page_res = self._session.get(url)
         film_page = BeautifulSoup(film_page_res.text, PARSER)
-        movie.parse_details_from_film_page(film_page)
 
-    def _parse_movies_page(
-        self, movies_page: BeautifulSoup, fetch_details: bool = False
-    ) -> list[HegreMovie]:
-        movies: list[HegreMovie] = []
-
-        movie_tags = movies_page.select("#films-listing .item")
-
-        for movie_tag in movie_tags:
-            movie = HegreMovie.from_films_listing(movie_tag)
-
-            if fetch_details:
-                film_page_res = requests.get(movie.url, cookies=self._cookies)
-                film_page = BeautifulSoup(film_page_res.text, PARSER)
-                movie.parse_details_from_film_page(film_page)
-
-            movies.append(movie)
-
-        return movies
+        return HegreMovie.from_film_page(url, film_page)
 
     def download_movie(
         self,
@@ -150,6 +166,7 @@ class Hegre:
         destination_folder: str,
         res: int | None = None,
         progress: Progress | None = None,
+        task_prefix: str | None = None,
     ) -> None:
         if "login" not in self._session.cookies:
             raise HegreError("No active session detected, please login first!")
@@ -157,20 +174,29 @@ class Hegre:
         if not os.path.isdir(destination_folder):
             raise ValueError(f"{destination_folder} is not a valid folder!")
 
+        # create subfolder for each year, if the movie has a date
+        if movie.date:
+            destination_folder = os.path.join(destination_folder, str(movie.date.year))
+
+        if not os.path.exists(destination_folder):
+            os.makedirs(destination_folder, exist_ok=True)
+
         res, url = movie.get_download_url_for_res(res)
 
         filename, metadata_filename = generate_movie_filename(url, movie)
         thumbnail, _ = generate_movie_filename(movie.cover_url, movie)
 
         try:
-            self._download_with_retries(url, destination_folder, filename, progress)
+            self._download_with_retries(
+                url, destination_folder, filename, progress, task_prefix
+            )
             movie.write_metadata_file(destination_folder, metadata_filename)
             self._download_file(
                 movie.cover_url, os.path.join(destination_folder, thumbnail)
             )
         except MovieAlreadyDownloaded as e:
             if progress:
-                progress.console.print(f"Skipping '{movie.title}': {e}")
+                progress.console.print(f"{task_prefix}Skipping '{movie.title}': {e}")
             else:
                 raise e
 
@@ -180,6 +206,7 @@ class Hegre:
         destination_folder: str,
         filename: str,
         progress: Progress = None,
+        task_prefix: str | None = None,
         max_retries: int = 3,
     ):
         dest_file = os.path.join(destination_folder, filename)
@@ -189,7 +216,7 @@ class Hegre:
             raise MovieAlreadyDownloaded(f"{filename} exists already!")
 
         if progress:
-            task_id = progress.add_task(filename, start=False)
+            task_id = progress.add_task(task_prefix + filename, start=False)
 
         attempt = 1
         failed = True
@@ -215,7 +242,7 @@ class Hegre:
                 attempt += 1
                 progress.update(task_id, description=f"[red strike]{filename}[/]")
                 progress.stop_task(task_id)
-                task_id = progress.add_task(filename, start=False)
+                task_id = progress.add_task(task_prefix + filename, start=False)
 
         # we can assume a successful download here
         os.rename(temp_file, dest_file)
@@ -248,9 +275,15 @@ def generate_movie_filename(url: str, movie: HegreMovie) -> tuple[str, str]:
     original_name = os.path.basename(urlparse(url).path)
     name, _ = os.path.splitext(original_name)
 
-    date_str = movie.date.strftime("%Y.%m.%d")
+    if movie.date:
+        date_str = movie.date.strftime("%Y.%m.%d")
 
-    return (
-        f"{date_str}-{movie.code}-{original_name}",
-        f"{date_str}-{movie.code}-{name}.json",
-    )
+        return (
+            f"{date_str}-{movie.code}-{original_name}",
+            f"{date_str}-{movie.code}-{name}.json",
+        )
+    else:
+        return (
+            f"{movie.code}-{original_name}",
+            f"{movie.code}-{name}.json",
+        )
