@@ -25,6 +25,7 @@ class HegreMovie:
     date: Optional[date]
     description: Optional[str]
 
+    tags: list[str]
     models: list[HegreModel]
     downloads: dict[int, str]
 
@@ -42,6 +43,7 @@ class HegreMovie:
         self.date = None
         self.description = None
 
+        self.tags = list()
         self.models = list()
         self.downloads = dict()
 
@@ -88,6 +90,11 @@ class HegreMovie:
                 url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
                 self.downloads.setdefault(res, url)
 
+        # tags
+        tags = film_page.select(".approved-tags > .tag")
+        for tag in tags:
+            self.tags.append(tag.text.strip().title())
+
     def parse_details_from_films_or_massage_page(
         self, film_page: BeautifulSoup
     ) -> None:
@@ -117,6 +124,11 @@ class HegreMovie:
             url = re.search(r"(http.*)\?", download_link.attrs["href"]).group(1)
             res = int(re.search(r"(\d{3,4})p", download_link.text).group(1))
             self.downloads.setdefault(res, url)
+
+        # tags
+        tags = film_page.select(".approved-tags > .tag")
+        for tag in tags:
+            self.tags.append(tag.text.strip().title())
 
     def get_highest_res_download_url(self) -> tuple[int, str]:
         sorted_resolutions = sorted(self.downloads, reverse=True)

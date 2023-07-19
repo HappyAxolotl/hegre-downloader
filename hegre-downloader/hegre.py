@@ -171,9 +171,6 @@ class Hegre:
         if "login" not in self._session.cookies:
             raise HegreError("No active session detected, please login first!")
 
-        if not os.path.isdir(destination_folder):
-            raise ValueError(f"{destination_folder} is not a valid folder!")
-
         # create subfolder for each year, if the movie has a date
         if movie.date:
             destination_folder = os.path.join(destination_folder, str(movie.date.year))

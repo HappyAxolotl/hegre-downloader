@@ -56,10 +56,10 @@ pre-commit install
     - `--no-thumb` do not download thumbnail
     - `--no-meta` do not create metadata file
     - `--no-file` do not download video file
-- Movies: Extract tags
 - Movies: parse download URLs wirh urllib for a safer removal of parameters
 - Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
 - Custom filenames with format strings
+- Show filesize while downloading
 - Support for gallery downloads
 - Subtitles (only on sexed videos?)
 - Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
