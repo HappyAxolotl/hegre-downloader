@@ -134,7 +134,7 @@ class HegreMovie:
         sorted_resolutions = sorted(self.downloads, reverse=True)
         return (sorted_resolutions[0], self.downloads[sorted_resolutions[0]])
 
-    def get_download_url_for_res(self, res: int | None = None) -> tuple[int, str]:
+    def get_download_url_for_res(self, res: Optional[int] = None) -> tuple[int, str]:
         if res and res not in self.downloads:
             raise KeyError(
                 f"Resolution {res}p is not available! Available resolutions are: {','.join(self.downloads.keys())}"

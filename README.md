@@ -52,10 +52,11 @@ pre-commit install
     - URL to movie: download this single movie
     - `-r` preferred resolution (e.g. 480, 1920, 2160)
     - `-d` destination folder
-    - `-r` number of retries
+    - `--retries` number of retries
     - `--no-thumb` do not download thumbnail
     - `--no-meta` do not create metadata file
     - `--no-file` do not download video file
+    - `--sort` sort order (only applicable when downloading all movies)
 - Movies: parse download URLs wirh urllib for a safer removal of parameters
 - Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
 - Custom filenames with format strings
