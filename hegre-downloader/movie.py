@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from bs4 import BeautifulSoup
-from bs4.element import Tag
 
 from datetime import datetime, date
 from typing import Optional
+from enum import Enum
 
 import os
 import re
@@ -13,6 +13,27 @@ import json
 from model import HegreModel
 from exceptions import HegreError
 from helper import HegreJSONEncoder
+
+
+class MovieType(Enum):
+    FILM = "films"
+    MASSAGE = "massage"
+    SEXED = "sexed"
+
+    def __str__(self) -> str:
+        return self.value
+
+    @staticmethod
+    def from_str(type_str: str) -> MovieType:
+        match type_str:
+            case MovieType.FILM.value:
+                return MovieType.FILM
+            case MovieType.MASSAGE.value:
+                return MovieType.MASSAGE
+            case MovieType.SEXED.value:
+                return MovieType.SEXED
+            case _:
+                raise ValueError(f"Invalid movie type string '{type_str}'")
 
 
 class HegreMovie:
@@ -24,14 +45,11 @@ class HegreMovie:
     cover_url: Optional[str]
     date: Optional[date]
     description: Optional[str]
+    type: Optional[MovieType]
 
     tags: list[str]
     models: list[HegreModel]
     downloads: dict[int, str]
-
-    # TODO new fields
-    # type: films, massage, sexed
-    # tags
 
     def __init__(self, url: str) -> None:
         self.url = url
@@ -42,6 +60,7 @@ class HegreMovie:
         self.cover_url = None
         self.date = None
         self.description = None
+        self.type = None
 
         self.tags = list()
         self.models = list()
@@ -54,8 +73,9 @@ class HegreMovie:
     def from_film_page(url: str, film_page: BeautifulSoup) -> HegreMovie:
         hm = HegreMovie(url)
 
-        if re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage)\/", url):
-            hm.parse_details_from_films_or_massage_page(film_page)
+        if match := re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage)\/", url):
+            type = MovieType.from_str(match.group(1))
+            hm.parse_details_from_films_or_massage_page(type, film_page)
         elif re.match(r"^https?:\/\/www\.hegre\.com\/sexed\/", url):
             hm.parse_details_from_sexed_page(film_page)
         else:
@@ -70,6 +90,7 @@ class HegreMovie:
             film_page.select_one(".film-header > div > strong").text.split()[0]
         )
         self.description = film_page.select_one(".film-header .intro").text.strip()
+        self.type = MovieType.SEXED
         # no upload date available!
         # no models available!
 
@@ -96,8 +117,9 @@ class HegreMovie:
             self.tags.append(tag.text.strip().title())
 
     def parse_details_from_films_or_massage_page(
-        self, film_page: BeautifulSoup
+        self, type: MovieType, film_page: BeautifulSoup
     ) -> None:
+        self.type = type
         self.title = film_page.select_one(".title > .translated-text").text.strip()
         self.code = int(film_page.select_one(".comments-wrapper").attrs["data-id"])
         self.duration = HegreMovie.duration_to_seconds(
