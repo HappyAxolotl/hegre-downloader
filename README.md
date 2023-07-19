@@ -27,15 +27,41 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 📖 Usage
-This tool does not have a CLI interface yet. It will start to download all movies into the folder `./downloads`, with subfolders for each year.
-```sh
-# Linux
-python3 hegre-downloader/downloader.py
-
-# Windows / macOS
-python hegre-downloader/downloader.py
+## 🧑‍💻 Usage as CLI tool
 ```
+usage: hegre-downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-download] [URL ...]
+
+Downloader for hegre.com
+
+You can specify one or more URLs that will be downloaded. If you do not provide a URL, it will download all movies. The following URLs are supported:
+- All movies:
+    https://www.hegre.com/movies
+- Single movie of type film:
+    https://www.hegre.com/films/title-of-the-film
+    https://www.hegre.com/films/69
+- Single movie of type massage:
+    https://www.hegre.com/massage/title-of-the-massage-film
+    https://www.hegre.com/massage/69
+- Single movie of type sexed:
+    https://www.hegre.com/sexed/title-of-the-sexed-film
+    https://www.hegre.com/sexed/69
+
+positional arguments:
+  URL                Hegre URL(s) to download. If none is specified, defaults to https://www.hegre.com/movies
+
+options:
+  -h, --help         show this help message and exit
+  -d PATH            Destination folder
+  -r HEIGHT_IN_PX    Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.
+  --sort SORT        Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated'.
+  --retries RETRIES  Number of retries for failed downloads. Defaults to 2. Set to 0 to disable retries.
+  --no-thumb         Do not download thumbnails
+  --no-meta          Do not create metadata file
+  --no-download      Do not download the actual file (movie or gallery)
+```
+
+## 📖 Usage as library
+*coming soon*
 
 ## 👷 Development
 Complete the setup steps above. After that, install development dependencies and the pre-commit hook for the formatter:
