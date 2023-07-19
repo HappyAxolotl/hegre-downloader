@@ -12,6 +12,7 @@ class Configuration:
 
     no_thumb: bool
     no_meta: bool
+    no_subtitles: bool
     no_download: bool
 
     resolution: Optional[int]
@@ -24,6 +25,7 @@ class Configuration:
         sort: SortOption,
         no_thumb: bool = False,
         no_meta: bool = False,
+        no_subtitles: bool = False,
         no_download: bool = False,
         resolution: Optional[int] = None,
     ) -> None:
@@ -34,6 +36,7 @@ class Configuration:
 
         self.no_thumb = no_thumb
         self.no_meta = no_meta
+        self.no_subtitles = no_subtitles
         self.no_download = no_download
 
         self.resolution = resolution

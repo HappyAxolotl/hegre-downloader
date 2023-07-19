@@ -184,10 +184,11 @@ class Hegre:
         if not os.path.exists(dest_folder):
             os.makedirs(dest_folder, exist_ok=True)
 
-        res, url = movie.get_download_url_for_res(configuration.resolution)
+        _, url = movie.get_download_url_for_res(configuration.resolution)
 
         filename, metadata_filename = generate_movie_filename(url, movie)
         thumbnail, _ = generate_movie_filename(movie.cover_url, movie)
+        subtitles, _ = generate_movie_filename(movie.subtitles_url, movie)
 
         try:
             if not configuration.no_download:
@@ -206,6 +207,11 @@ class Hegre:
             if not configuration.no_thumb:
                 self._download_file(
                     movie.cover_url, os.path.join(dest_folder, thumbnail)
+                )
+
+            if not configuration.no_subtitles and movie.subtitles_url:
+                self._download_file(
+                    movie.subtitles_url, os.path.join(dest_folder, subtitles)
                 )
         except MovieAlreadyDownloaded as e:
             if progress:
