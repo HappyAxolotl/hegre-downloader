@@ -84,6 +84,12 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         default=False,
     )
     parser.add_argument(
+        "--no-subtitles",
+        help="Do not download subtitles (only applicable for sexed movies)",
+        action="store_true",
+        default=False,
+    )
+    parser.add_argument(
         "--no-download",
         help="Do not download the actual file (movie or gallery)",
         action="store_true",
@@ -105,6 +111,7 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         args.sort,
         no_thumb=args.no_thumb,
         no_meta=args.no_meta,
+        no_subtitles=args.no_subtitles,
         no_download=args.no_download,
         resolution=args.r,
     )

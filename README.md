@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 ## 🧑‍💻 Usage as CLI tool
 ```
-usage: hegre-downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-download] [URL ...]
+usage: hegre-downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [URL ...]
 
 Downloader for hegre.com
 
@@ -57,6 +57,7 @@ options:
   --retries RETRIES  Number of retries for failed downloads. Defaults to 2. Set to 0 to disable retries.
   --no-thumb         Do not download thumbnails
   --no-meta          Do not create metadata file
+  --no-subtitles     Do not download subtitles (only applicable for sexed movies)
   --no-download      Do not download the actual file (movie or gallery)
 ```
 
@@ -71,7 +72,6 @@ pre-commit install
 ```
 
 ## 💡 Ideas
-- Movies: parse download URLs wirh urllib for a safer removal of parameters
 - Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
 - Custom filenames with format strings
 - Show filesize while downloading
