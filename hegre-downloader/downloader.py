@@ -92,6 +92,12 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
 
     args = parser.parse_args()
 
+    if args.no_thumb and args.no_meta and args.no_download:
+        console.print(
+            "[red]By specifying --no-thumb, --no-meta and --no-download you've essentially told the tool to do nothing. Please use a maximum of two of these options."
+        )
+        sys.exit(1)
+
     return Configuration(
         args.urls,
         args.d,
