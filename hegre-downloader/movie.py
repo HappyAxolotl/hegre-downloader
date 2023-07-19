@@ -4,28 +4,44 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from datetime import datetime, date
+from typing import Optional
 
 import os
 import re
 import json
 
 from model import HegreModel
+from exceptions import HegreError
 from helper import HegreJSONEncoder
 
 
 class HegreMovie:
-    title: str
-    code: int
     url: str
-    duration: int
 
-    cover_url: str
-    date: date
-    description: str
+    title: Optional[str]
+    code: Optional[int]
+    duration: Optional[int]
+    cover_url: Optional[str]
+    date: Optional[date]
+    description: Optional[str]
+
     models: list[HegreModel]
     downloads: dict[int, str]
 
-    def __init__(self) -> None:
+    # TODO new fields
+    # type: films, massage, sexed
+    # tags
+
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+        self.title = None
+        self.code = None
+        self.duration = None
+        self.cover_url = None
+        self.date = None
+        self.description = None
+
         self.models = list()
         self.downloads = dict()
 
@@ -33,33 +49,69 @@ class HegreMovie:
         return f"{self.title} [code: {self.code}, duration: {self.duration}s]"
 
     @staticmethod
-    def from_films_listing(films_item: Tag) -> HegreMovie:
-        hm = HegreMovie()
+    def from_film_page(url: str, film_page: BeautifulSoup) -> HegreMovie:
+        hm = HegreMovie(url)
 
-        hm.title = films_item.select_one("a").attrs["title"]
-        hm.code = int(films_item.select_one("a").attrs["data-id"])
-        hm.url = "https://www.hegre.com" + films_item.select_one("a").attrs["href"]
-        hm.duration = HegreMovie.duration_to_seconds(
-            films_item.select_one(".right").text.strip()
-        )
+        if re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage)\/", url):
+            hm.parse_details_from_films_or_massage_page(film_page)
+        elif re.match(r"^https?:\/\/www\.hegre\.com\/sexed\/", url):
+            hm.parse_details_from_sexed_page(film_page)
+        else:
+            raise HegreError(f"Unsupported movie URL {url}")
 
         return hm
 
-    def parse_details_from_film_page(self, film_page: BeautifulSoup) -> None:
+    def parse_details_from_sexed_page(self, film_page: BeautifulSoup) -> None:
+        self.title = film_page.select_one(".film-header > h1").text.strip()
+        self.code = int(film_page.select_one(".comments-wrapper").attrs["data-id"])
+        self.duration = HegreMovie.duration_to_seconds(
+            film_page.select_one(".film-header > div > strong").text.split()[0]
+        )
+        self.description = film_page.select_one(".film-header .intro").text.strip()
+        # no upload date available!
+        # no models available!
+
         # cover image
         bg_image_url = film_page.select_one(".video-player-wrapper").attrs["style"]
         if url_result := re.search(r"(http.*)\?", bg_image_url):
             self.cover_url = url_result.group(1)
 
+        # download links
+        video_player_script = film_page.select_one(".top script").text
+        if video_player_raw_json := re.search(r'({".*)\);', video_player_script):
+            video_player_json = json.loads(video_player_raw_json.group(1))
+            resolutions = video_player_json["resolutions"]
+
+            for resolution in resolutions:
+                res = resolution["type"]
+                url = resolution["sources"]["default"][0]["mp4"]
+                url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
+                self.downloads.setdefault(res, url)
+
+    def parse_details_from_films_or_massage_page(
+        self, film_page: BeautifulSoup
+    ) -> None:
+        self.title = film_page.select_one(".title > .translated-text").text.strip()
+        self.code = int(film_page.select_one(".comments-wrapper").attrs["data-id"])
+        self.duration = HegreMovie.duration_to_seconds(
+            film_page.select_one(".format-details").text.split()[1]
+        )
         self.description = film_page.select_one(".massage-copy").text.strip()
         self.date = datetime.strptime(film_page.select_one(".date").text, "%B %d, %Y")
 
+        # cover image
+        bg_image_url = film_page.select_one(".video-player-wrapper").attrs["style"]
+        if url_result := re.search(r"(http.*)\?", bg_image_url):
+            self.cover_url = url_result.group(1)
+
+        # models
         models = film_page.select(".record-model")
         for model in models:
             url = "https://www.hegre.com" + model.attrs["href"]
             name = model.attrs["title"]
             self.models.append(HegreModel(name, url))
 
+        # download URLs
         download_links = film_page.select(".content a")
         for download_link in download_links:
             url = re.search(r"(http.*)\?", download_link.attrs["href"]).group(1)

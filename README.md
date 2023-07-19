@@ -55,7 +55,14 @@ pre-commit install
     - `-r` number of retries
     - `--no-thumb` do not download thumbnail
     - `--no-meta` do not create metadata file
-- Update progress in "Fetching movies" (e.g. `250/1025`)
+    - `--no-file` do not download video file
+- Movies: Extract tags
+- Movies: parse download URLs wirh urllib for a safer removal of parameters
 - Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
 - Custom filenames with format strings
 - Support for gallery downloads
+- Subtitles (only on sexed videos?)
+- Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
+- Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
+- Documentation
+- Unit testing
