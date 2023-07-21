@@ -186,9 +186,8 @@ class Hegre:
 
         _, url = movie.get_download_url_for_res(configuration.resolution)
 
-        filename, metadata_filename = generate_movie_filename(url, movie)
-        thumbnail, _ = generate_movie_filename(movie.cover_url, movie)
-        subtitles, _ = generate_movie_filename(movie.subtitles_url, movie)
+        filename, metadata_filename = generate_filename(url, movie)
+        thumbnail, _ = generate_filename(movie.cover_url, movie)
 
         try:
             if not configuration.no_download:
@@ -209,10 +208,14 @@ class Hegre:
                     movie.cover_url, os.path.join(dest_folder, thumbnail)
                 )
 
-            if not configuration.no_subtitles and movie.subtitles_url:
-                self._download_file(
-                    movie.subtitles_url, os.path.join(dest_folder, subtitles)
+            if not configuration.no_subtitles:
+                subtitle_urls = movie.get_subtitle_download_urls(
+                    configuration.subtitles
                 )
+                for url in subtitle_urls:
+                    sub_filename, _ = generate_filename(url, movie)
+                    self._download_file(url, os.path.join(dest_folder, sub_filename))
+
         except MovieAlreadyDownloaded as e:
             if progress:
                 progress.console.print(f"{task_prefix}Skipping '{movie.title}': {e}")
@@ -290,7 +293,7 @@ class Hegre:
                         progress.update(task_id, advance=chunk_size)
 
 
-def generate_movie_filename(url: str, movie: HegreMovie) -> tuple[str, str]:
+def generate_filename(url: str, movie: HegreMovie) -> tuple[str, str]:
     original_name = os.path.basename(urlparse(url).path)
     name, _ = os.path.splitext(original_name)
 

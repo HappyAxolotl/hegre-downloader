@@ -26,11 +26,11 @@ class HegreMovie:
     date: Optional[date]
     description: Optional[str]
     type: Optional[MovieType]
-    subtitles_url: Optional[str]
 
     tags: list[str]
     models: list[HegreModel]
     downloads: dict[int, str]
+    subtitles: dict[str, str]
 
     def __init__(self, url: str) -> None:
         self.url = url
@@ -42,11 +42,11 @@ class HegreMovie:
         self.date = None
         self.description = None
         self.type = None
-        self.subtitles_url = None
 
         self.tags = list()
         self.models = list()
         self.downloads = dict()
+        self.subtitles = dict()
 
     def __str__(self) -> str:
         return f"{self.title} [code: {self.code}, duration: {self.duration}s]"
@@ -136,10 +136,21 @@ class HegreMovie:
                 url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
                 self.downloads.setdefault(res, url)
 
-            subtitles = video_player_json["clip"]["subtitles"]
-            if len(subtitles) > 0:
-                subtitles = subtitles[0]["src"]
-                self.subtitles_url = re.search(r"(http.*)\?", subtitles).group(1)
+            subtitles: list[dict[str, str]] = video_player_json["clip"]["subtitles"]
+            for subtitle in subtitles:
+                label = subtitle["label"].lower()
+                url = subtitle["src"]
+                url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
+                self.subtitles.setdefault(label, url)
+
+    def get_subtitle_download_urls(self, languages: list[str]) -> list[str]:
+        urls = []
+
+        for lang, url in self.subtitles.items():
+            if lang in languages:
+                urls.append(url)
+
+        return urls
 
     def get_highest_res_download_url(self) -> tuple[int, str]:
         sorted_resolutions = sorted(self.downloads, reverse=True)

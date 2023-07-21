@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 ## 🧑‍💻 Usage as CLI tool
 ```
-usage: hegre-downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [URL ...]
+usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [URL ...]
 
 Downloader for hegre.com
 
@@ -47,18 +47,20 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
     https://www.hegre.com/sexed/69
 
 positional arguments:
-  URL                Hegre URL(s) to download. If none is specified, defaults to https://www.hegre.com/movies
+  URL                   Hegre URL(s) to download. If none is specified, defaults to https://www.hegre.com/movies
 
 options:
-  -h, --help         show this help message and exit
-  -d PATH            Destination folder
-  -r HEIGHT_IN_PX    Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.
-  --sort SORT        Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated'.
-  --retries RETRIES  Number of retries for failed downloads. Defaults to 2. Set to 0 to disable retries.
-  --no-thumb         Do not download thumbnails
-  --no-meta          Do not create metadata file
-  --no-subtitles     Do not download subtitles (only applicable for sexed movies)
-  --no-download      Do not download the actual file (movie or gallery)
+  -h, --help            show this help message and exit
+  -d PATH               Destination folder
+  -r HEIGHT_IN_PX       Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.
+  --sort SORT           Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated'.
+  --retries RETRIES     Number of retries for failed downloads. Defaults to 2. Set to 0 to disable retries.
+  --no-thumb            Do not download thumbnails
+  --no-meta             Do not create metadata file
+  --no-subtitles        Do not download subtitles
+  --no-download         Do not download the actual file (movie or gallery)
+  --subtitles SUBTITLES
+                        Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple langauges must separated by comma (e.g. 'english,german,japanese').
 ```
 
 ## 📖 Usage as library
