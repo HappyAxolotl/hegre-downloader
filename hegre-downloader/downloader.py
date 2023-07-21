@@ -18,7 +18,7 @@ DOWNLOAD_TASK_PREFIX = "[{:>4} / {:>4}] "
 
 def load_config_from_args() -> Configuration:
     parser = argparse.ArgumentParser(
-        prog="hegre-downloader",
+        prog="downloader",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""Downloader for hegre.com
 
@@ -85,7 +85,7 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
     )
     parser.add_argument(
         "--no-subtitles",
-        help="Do not download subtitles (only applicable for sexed movies)",
+        help="Do not download subtitles",
         action="store_true",
         default=False,
     )
@@ -95,14 +95,23 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         action="store_true",
         default=False,
     )
+    parser.add_argument(
+        "--subtitles",
+        help="Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple langauges must separated by comma (e.g. 'english,german,japanese').",
+        action="store",
+        default="english",
+    )
 
     args = parser.parse_args()
 
-    if args.no_thumb and args.no_meta and args.no_download:
+    if args.no_thumb and args.no_meta and args.no_subtitles and args.no_download:
         console.print(
-            "[red]By specifying --no-thumb, --no-meta and --no-download you've essentially told the tool to do nothing. Please use a maximum of two of these options."
+            "[red]By specifying --no-thumb, --no-meta, --no-subtitles and --no-download you've essentially told the tool to do nothing. Please use a maximum of three of these options."
         )
         sys.exit(1)
+
+    subtitles = args.subtitles.split(",")
+    subtitles = [language.lower() for language in subtitles]
 
     return Configuration(
         args.urls,
@@ -114,6 +123,7 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         no_subtitles=args.no_subtitles,
         no_download=args.no_download,
         resolution=args.r,
+        subtitles=subtitles,
     )
 
 
