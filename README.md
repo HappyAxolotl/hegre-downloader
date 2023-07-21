@@ -1,7 +1,7 @@
 # hegre downloader
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Downloader for `hegre.com`, written in python. This tool can only download videos if you provide account details with a valid subsription.
+Downloader and metadata extractor for `hegre.com`, written in python. This tool can only download videos if you provide account details with a valid subsription.
 
 **Disclaimer**: This is my first real python project, so there's probably a lot of room for improvements. Also it is mainly developed for my personal purpose of downloading videos, hence the (current) lack of a gallery download option.
 
@@ -72,12 +72,15 @@ pre-commit install
 ```
 
 ## 💡 Ideas
+- Download screengrabs (ZIP file includes poster and board image)
 - Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
-- Custom filenames with format strings
 - Show filesize while downloading
-- Support for gallery downloads
-- Subtitles (only on sexed videos?)
 - Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
+- Custom filenames with format strings
+- Support for gallery downloads
+- More robustness on errors (e.g. HTTP 404)
+- Exit gracefully on SIGINT (`Ctrl+C`)
 - Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
+- Include trailer URLs in metadata
 - Documentation
 - Unit testing
