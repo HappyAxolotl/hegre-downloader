@@ -81,20 +81,9 @@ class HegreMovie:
         if url_result := re.search(r"(http.*)\?", bg_image_url):
             self.cover_url = url_result.group(1)
 
-        # download links & subtitles
+        # download URLs & subtitles
         video_player_script = film_page.select_one(".top script").text
-        if video_player_raw_json := re.search(r'({".*)\);', video_player_script):
-            video_player_json = json.loads(video_player_raw_json.group(1))
-            resolutions = video_player_json["resolutions"]
-
-            for resolution in resolutions:
-                res = resolution["type"]
-                url = resolution["sources"]["default"][0]["mp4"]
-                url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
-                self.downloads.setdefault(res, url)
-
-            subtitles = video_player_json["clip"]["subtitles"][0]["src"]
-            self.subtitles_url = re.search(r"(http.*)\?", subtitles).group(1)
+        self._extract_downloads_subtitles_from_video_player(video_player_script)
 
         # tags
         tags = film_page.select(".approved-tags > .tag")
@@ -125,17 +114,32 @@ class HegreMovie:
             name = model.attrs["title"]
             self.models.append(HegreModel(name, url))
 
-        # download URLs
-        download_links = film_page.select(".content a")
-        for download_link in download_links:
-            url = re.search(r"(http.*)\?", download_link.attrs["href"]).group(1)
-            res = int(re.search(r"(\d{3,4})p", download_link.text).group(1))
-            self.downloads.setdefault(res, url)
+        # download URLs & subtitles
+        video_player_script = film_page.select_one(".video-inner > script").text
+        self._extract_downloads_subtitles_from_video_player(video_player_script)
 
         # tags
         tags = film_page.select(".approved-tags > .tag")
         for tag in tags:
             self.tags.append(tag.text.strip().title())
+
+    def _extract_downloads_subtitles_from_video_player(
+        self, video_player_script: str
+    ) -> None:
+        if video_player_raw_json := re.search(r'({".*)\);', video_player_script):
+            video_player_json = json.loads(video_player_raw_json.group(1))
+            resolutions = video_player_json["resolutions"]
+
+            for resolution in resolutions:
+                res = resolution["type"]
+                url = resolution["sources"]["default"][0]["mp4"]
+                url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
+                self.downloads.setdefault(res, url)
+
+            subtitles = video_player_json["clip"]["subtitles"]
+            if len(subtitles) > 0:
+                subtitles = subtitles[0]["src"]
+                self.subtitles_url = re.search(r"(http.*)\?", subtitles).group(1)
 
     def get_highest_res_download_url(self) -> tuple[int, str]:
         sorted_resolutions = sorted(self.downloads, reverse=True)

@@ -179,7 +179,7 @@ if __name__ == "__main__":
     for url in configuration.urls:
         console.print(f"Downloading {url}:")
         try:
-            urls = hegre.resolve_urls(url, show_progress=True)
+            urls = hegre.resolve_urls(url, sort=configuration.sort, show_progress=True)
             download_urls(urls, configuration)
         except HegreError as e:
             console.print(f"[red]:x: {e}")
