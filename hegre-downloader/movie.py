@@ -32,6 +32,7 @@ class HegreMovie:
     models: list[HegreModel]
     downloads: dict[int, str]
     subtitles: dict[str, str]
+    trailers: dict[int, str]
 
     def __init__(self, url: str) -> None:
         self.url = url
@@ -49,6 +50,7 @@ class HegreMovie:
         self.models = list()
         self.downloads = dict()
         self.subtitles = dict()
+        self.trailers = dict()
 
     def __str__(self) -> str:
         return f"{self.title} [code: {self.code}, duration: {self.duration}s]"
@@ -98,6 +100,14 @@ class HegreMovie:
             _, url = next(iter(self.downloads.items()))
             self.screengrabs_url = re.sub(r"-\d{2,4}p\.mp4$", ".zip", url)
 
+        # trailer URLs
+        for res, download_url in self.downloads.items():
+            res_str = f"{res}p"
+            trailer_url = download_url.replace("c.hegre.com", "p.hegre.com")
+            trailer_url = trailer_url.replace(res_str, f"trailer-{res_str}")
+
+            self.trailers.setdefault(res, trailer_url)
+
     def parse_details_from_films_or_massage_page(
         self, type: MovieType, film_page: BeautifulSoup
     ) -> None:
@@ -135,6 +145,15 @@ class HegreMovie:
         tags = film_page.select(".approved-tags > .tag")
         for tag in tags:
             self.tags.append(tag.text.strip().title())
+
+        # trailer URLs
+        trailers = film_page.select(".trailer > a")
+        for trailer in trailers:
+            res_text = trailer.select_one("strong").text
+            res = int(re.search(r"(\d{3,4})p", res_text).group(1))
+
+            url = re.search(r"(http.*)\?", trailer.attrs["href"]).group(1)
+            self.trailers.setdefault(res, url)
 
     def _extract_downloads_subtitles_from_video_player(
         self, video_player_script: str
@@ -178,6 +197,24 @@ class HegreMovie:
             url = self.downloads[res]
         else:
             res, url = self.get_highest_res_download_url()
+
+        return res, url
+
+    def get_highest_res_trailer_download_url(self) -> tuple[int, str]:
+        sorted_resolutions = sorted(self.trailers, reverse=True)
+        return (sorted_resolutions[0], self.trailers[sorted_resolutions[0]])
+
+    def get_trailer_download_url_for_res(
+        self, res: Optional[int] = None
+    ) -> tuple[int, str]:
+        if res and res not in self.trailers:
+            raise KeyError(
+                f"Resolution {res}p is not available! Available resolutions are: {','.join(self.trailers.keys())}"
+            )
+        elif res:
+            url = self.trailers[res]
+        else:
+            res, url = self.get_highest_res_trailer_download_url()
 
         return res, url
 
