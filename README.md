@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 ## 🧑‍💻 Usage as CLI tool
 ```
-usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [URL ...]
+usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] [URL ...]
 
 Downloader for hegre.com
 
@@ -61,6 +61,8 @@ options:
   --no-download         Do not download the actual file (movie or gallery)
   --subtitles SUBTITLES
                         Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple langauges must separated by comma (e.g. 'english,german,japanese').
+  --screengrabs         Download screengrabs
+  --trailer             Download trailer
 ```
 
 ## 📖 Usage as library
@@ -74,7 +76,6 @@ pre-commit install
 ```
 
 ## 💡 Ideas
-- Download screengrabs (ZIP file includes poster and board image)
 - Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
 - Show filesize while downloading
 - Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
@@ -83,6 +84,5 @@ pre-commit install
 - More robustness on errors (e.g. HTTP 404)
 - Exit gracefully on SIGINT (`Ctrl+C`)
 - Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
-- Include trailer URLs in metadata
 - Documentation
 - Unit testing

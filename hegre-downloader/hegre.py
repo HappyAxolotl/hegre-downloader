@@ -217,10 +217,17 @@ class Hegre:
                     self._download_file(url, os.path.join(dest_folder, sub_filename))
 
             if configuration.screengrabs and movie.screengrabs_url:
-                filename, _ = generate_filename(movie.screengrabs_url, movie)
+                screengrab_file, _ = generate_filename(movie.screengrabs_url, movie)
                 self._download_file(
-                    movie.screengrabs_url, os.path.join(dest_folder, filename)
+                    movie.screengrabs_url, os.path.join(dest_folder, screengrab_file)
                 )
+
+            if configuration.trailer:
+                _, url = movie.get_trailer_download_url_for_res(
+                    configuration.resolution
+                )
+                trailer_file, _ = generate_filename(url, movie)
+                self._download_file(url, os.path.join(dest_folder, trailer_file))
 
         except MovieAlreadyDownloaded as e:
             if progress:

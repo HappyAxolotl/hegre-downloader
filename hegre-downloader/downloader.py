@@ -104,6 +104,9 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
     parser.add_argument(
         "--screengrabs", help="Download screengrabs", action="store_true", default=False
     )
+    parser.add_argument(
+        "--trailer", help="Download trailer", action="store_true", default=False
+    )
 
     args = parser.parse_args()
 
@@ -126,6 +129,7 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         no_subtitles=args.no_subtitles,
         no_download=args.no_download,
         screengrabs=args.screengrabs,
+        trailer=args.trailer,
         resolution=args.r,
         subtitles=subtitles,
     )
