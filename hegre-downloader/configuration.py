@@ -14,6 +14,7 @@ class Configuration:
     no_meta: bool
     no_subtitles: bool
     no_download: bool
+    screengrabs: bool
 
     resolution: Optional[int]
     subtitles: Optional[list[str]]
@@ -28,6 +29,7 @@ class Configuration:
         no_meta: bool = False,
         no_subtitles: bool = False,
         no_download: bool = False,
+        screengrabs: bool = False,
         resolution: Optional[int] = None,
         subtitles: Optional[list[str]] = None,
     ) -> None:
@@ -40,6 +42,7 @@ class Configuration:
         self.no_meta = no_meta
         self.no_subtitles = no_subtitles
         self.no_download = no_download
+        self.screengrabs = screengrabs
 
         self.resolution = resolution
         self.subtitles = subtitles
