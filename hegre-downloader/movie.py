@@ -23,6 +23,7 @@ class HegreMovie:
     code: Optional[int]
     duration: Optional[int]
     cover_url: Optional[str]
+    screengrabs_url = Optional[str]
     date: Optional[date]
     description: Optional[str]
     type: Optional[MovieType]
@@ -39,6 +40,7 @@ class HegreMovie:
         self.code = None
         self.duration = None
         self.cover_url = None
+        self.screengrabs_url = None
         self.date = None
         self.description = None
         self.type = None
@@ -90,6 +92,12 @@ class HegreMovie:
         for tag in tags:
             self.tags.append(tag.text.strip().title())
 
+        # screengrabs
+        if len(self.downloads) > 0:
+            # replace the resolution and the .mp4 ending with .zip to download screengrabs for sexed movies
+            _, url = next(iter(self.downloads.items()))
+            self.screengrabs_url = re.sub(r"-\d{2,4}p\.mp4$", ".zip", url)
+
     def parse_details_from_films_or_massage_page(
         self, type: MovieType, film_page: BeautifulSoup
     ) -> None:
@@ -106,6 +114,11 @@ class HegreMovie:
         bg_image_url = film_page.select_one(".video-player-wrapper").attrs["style"]
         if url_result := re.search(r"(http.*)\?", bg_image_url):
             self.cover_url = url_result.group(1)
+
+        # screengrabs
+        screengrabs_url = film_page.select_one(".video-stills > a").attrs["href"]
+        if url_result := re.search(r"(http.*)\?", screengrabs_url):
+            self.screengrabs_url = url_result.group(1)
 
         # models
         models = film_page.select(".record-model")

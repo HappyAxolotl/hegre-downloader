@@ -216,6 +216,12 @@ class Hegre:
                     sub_filename, _ = generate_filename(url, movie)
                     self._download_file(url, os.path.join(dest_folder, sub_filename))
 
+            if configuration.screengrabs and movie.screengrabs_url:
+                filename, _ = generate_filename(movie.screengrabs_url, movie)
+                self._download_file(
+                    movie.screengrabs_url, os.path.join(dest_folder, filename)
+                )
+
         except MovieAlreadyDownloaded as e:
             if progress:
                 progress.console.print(f"{task_prefix}Skipping '{movie.title}': {e}")
