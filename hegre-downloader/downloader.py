@@ -61,6 +61,7 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
     )
     parser.add_argument(
         "-p",
+        metavar="NUM_OF_TASKS",
         help="Number of parallel tasks. Defaults to 1.",
         type=int,
         action="store",
