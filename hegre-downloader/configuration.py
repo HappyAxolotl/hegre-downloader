@@ -8,6 +8,7 @@ class Configuration:
     urls: list[str]
     destination_folder: Path
     retries: int
+    parallel_tasks: int
     sort: SortOption
 
     no_thumb: bool
@@ -25,6 +26,7 @@ class Configuration:
         urls: list[str],
         destination_folder: Path,
         retries: int,
+        parallel_tasks: int,
         sort: SortOption,
         no_thumb: bool = False,
         no_meta: bool = False,
@@ -38,6 +40,7 @@ class Configuration:
         self.urls = urls
         self.destination_folder = destination_folder
         self.retries = retries
+        self.parallel_tasks = parallel_tasks
         self.sort = sort
 
         self.no_thumb = no_thumb
