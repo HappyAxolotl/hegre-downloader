@@ -29,9 +29,9 @@ pip install -r requirements.txt
 
 ## 🧑‍💻 Usage as CLI tool
 ```
-usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] [URL ...]
+usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [-p NUM_OF_TASKS] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] [URL ...]
 
-Downloader for hegre.com
+Downloader and metadata extractor for hegre.com
 
 You can specify one or more URLs that will be downloaded. If you do not provide a URL, it will download all movies. The following URLs are supported:
 - All movies:
@@ -53,6 +53,7 @@ options:
   -h, --help            show this help message and exit
   -d PATH               Destination folder
   -r HEIGHT_IN_PX       Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.
+  -p NUM_OF_TASKS       Number of parallel tasks. Defaults to 1.
   --sort SORT           Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated'.
   --retries RETRIES     Number of retries for failed downloads. Defaults to 2. Set to 0 to disable retries.
   --no-thumb            Do not download thumbnails
@@ -76,7 +77,6 @@ pre-commit install
 ```
 
 ## 💡 Ideas
-- Parallel downloads ([example](https://github.com/Textualize/rich/blob/master/examples/downloader.py))
 - Show filesize while downloading
 - Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
 - Custom filenames with format strings
