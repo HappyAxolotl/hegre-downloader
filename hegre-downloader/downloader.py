@@ -12,6 +12,7 @@ from configuration import Configuration
 from dotenv import load_dotenv
 from rich.progress import Progress, TaskID
 from rich.console import Console
+from concurrent.futures import ThreadPoolExecutor
 
 DOWNLOAD_TASK_PREFIX = "[{:>4} / {:>4}] "
 
@@ -20,7 +21,7 @@ def load_config_from_args() -> Configuration:
     parser = argparse.ArgumentParser(
         prog="downloader",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""Downloader for hegre.com
+        description="""Downloader and metadata extractor for hegre.com
 
 You can specify one or more URLs that will be downloaded. If you do not provide a URL, it will download all movies. The following URLs are supported:
 - All movies:
@@ -57,6 +58,13 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         help="Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.",
         type=int,
         action="store",
+    )
+    parser.add_argument(
+        "-p",
+        help="Number of parallel tasks. Defaults to 1.",
+        type=int,
+        action="store",
+        default=1,
     )
     parser.add_argument(
         "--sort",
@@ -123,6 +131,7 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
         args.urls,
         args.d,
         args.retries,
+        args.p,
         args.sort,
         no_thumb=args.no_thumb,
         no_meta=args.no_meta,
@@ -151,16 +160,18 @@ def download_urls(urls: list[str], configuration: Configuration) -> None:
         return
 
     with Progress() as progress:
-        for count, url in enumerate(urls):
-            try:
-                download_url(
-                    url,
-                    configuration,
-                    DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
-                    progress,
-                )
-            except HegreError as e:
-                progress.console.print(f"[red] {e}")
+        with ThreadPoolExecutor(max_workers=configuration.parallel_tasks) as pool:
+            for count, url in enumerate(urls):
+                try:
+                    pool.submit(
+                        download_url,
+                        url,
+                        configuration,
+                        DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
+                        progress,
+                    )
+                except HegreError as e:
+                    progress.console.print(f"[red] {e}")
 
 
 def download_url(

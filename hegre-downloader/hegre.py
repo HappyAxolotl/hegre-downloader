@@ -275,7 +275,9 @@ class Hegre:
 
             if failed:
                 attempt += 1
-                progress.update(task_id, description=f"[red strike]{filename}[/]")
+                progress.update(
+                    task_id, description=f"[red strike]{task_prefix}{filename}[/]"
+                )
                 progress.stop_task(task_id)
                 task_id = progress.add_task(task_prefix + filename, start=False)
 
