@@ -1,4 +1,4 @@
-beautifulsoup4
-python-dotenv
-requests
-rich
+beautifulsoup4==4.12.2
+python-dotenv==1.0.0
+requests==2.31.0
+rich==13.5.2
