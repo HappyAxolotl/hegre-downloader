@@ -126,9 +126,12 @@ class HegreMovie:
             self.cover_url = url_result.group(1)
 
         # screengrabs
-        screengrabs_url = film_page.select_one(".video-stills > a").attrs["href"]
-        if url_result := re.search(r"(http.*)\?", screengrabs_url):
-            self.screengrabs_url = url_result.group(1)
+        screengrabs_element = film_page.select_one(".video-stills > a")
+        if screengrabs_element:
+            if url_result := re.search(
+                r"(http.*)\?", screengrabs_element.attrs["href"]
+            ):
+                self.screengrabs_url = url_result.group(1)
 
         # models
         models = film_page.select(".record-model")
