@@ -84,5 +84,6 @@ pre-commit install
 - More robustness on errors (e.g. HTTP 404)
 - Exit gracefully on SIGINT (`Ctrl+C`)
 - Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
+- Logout
 - Documentation
 - Unit testing

@@ -161,18 +161,27 @@ def download_urls(urls: list[str], configuration: Configuration) -> None:
         return
 
     with Progress() as progress:
-        with ThreadPoolExecutor(max_workers=configuration.parallel_tasks) as pool:
+        if configuration.parallel_tasks > 1:
+            with ThreadPoolExecutor(max_workers=configuration.parallel_tasks) as pool:
+                for count, url in enumerate(urls):
+                    try:
+                        pool.submit(
+                            download_url,
+                            url,
+                            configuration,
+                            DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
+                            progress,
+                        )
+                    except HegreError as e:
+                        progress.console.print(f"[red] Error downloading {url}: {e}")
+        else:
             for count, url in enumerate(urls):
-                try:
-                    pool.submit(
-                        download_url,
-                        url,
-                        configuration,
-                        DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
-                        progress,
-                    )
-                except HegreError as e:
-                    progress.console.print(f"[red] {e}")
+                download_url(
+                    url,
+                    configuration,
+                    DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
+                    progress,
+                )
 
 
 def download_url(
