@@ -35,6 +35,11 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
 - Single movie of type sexed:
     https://www.hegre.com/sexed/title-of-the-sexed-film
     https://www.hegre.com/sexed/69
+- All galleries:
+    https://www.hegre.com/photos
+- Single gallery:
+    https://www.hegre.com/photos/title-of-the-gallery
+    https://www.hegre.com/photos/69
 """,
     )
     parser.add_argument(
@@ -193,6 +198,7 @@ def download_url(
         hegre.download_movie(
             movie, configuration, progress=progress, task_prefix=task_prefix
         )
+    # Gallery
     elif re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
         gallery = hegre.get_gallery_from_url(url)
         hegre.download_gallery(

@@ -76,7 +76,7 @@ class HegreGallery:
         for link in links:
             url = link.attrs["href"]
             url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
-            px = re.search(r"-(\d{4,5})px", url).group(1)
+            px = int(re.search(r"-(\d{4,5})px", url).group(1))
 
             self.downloads.setdefault(px, url)
 

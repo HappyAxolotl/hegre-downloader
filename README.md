@@ -1,9 +1,9 @@
 # hegre downloader
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Downloader and metadata extractor for `hegre.com`, written in python. This tool can only download videos if you provide account details with a valid subsription.
+Downloader and metadata extractor for `hegre.com`, written in python. This tool can only download content if you provide account details with a valid subsription.
 
-**Disclaimer**: This is my first real python project, so there's probably a lot of room for improvements. Also it is mainly developed for my personal purpose of downloading videos, hence the (current) lack of a gallery download option.
+**Disclaimer**: This is my first real python project, so there's probably a lot of room for improvements. Also it is mainly developed for my personal purpose of downloading videos.
 
 ## 🪛 Setup
 - Make sure that you have git and python 3.11 installed
@@ -45,6 +45,11 @@ You can specify one or more URLs that will be downloaded. If you do not provide 
 - Single movie of type sexed:
     https://www.hegre.com/sexed/title-of-the-sexed-film
     https://www.hegre.com/sexed/69
+- All galleries:
+    https://www.hegre.com/photos
+- Single gallery:
+    https://www.hegre.com/photos/title-of-the-gallery
+    https://www.hegre.com/photos/69
 
 positional arguments:
   URL                   Hegre URL(s) to download. If none is specified, defaults to https://www.hegre.com/movies
@@ -80,7 +85,6 @@ pre-commit install
 - Show filesize while downloading
 - Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
 - Custom filenames with format strings
-- Support for gallery downloads
 - More robustness on errors (e.g. HTTP 404)
 - Exit gracefully on SIGINT (`Ctrl+C`)
 - Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
