@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Optional
 
 from movie import HegreMovie
+from gallery import HegreGallery
 from sort_option import SortOption
 from exceptions import HegreError, MovieAlreadyDownloaded
 from configuration import Configuration
@@ -100,11 +101,13 @@ class Hegre:
                 urls = self.get_movie_urls(total, sort)
 
             return urls
-        elif re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage|sexed)\/", url):
+        elif re.match(
+            r"^https?:\/\/www\.hegre\.com\/(photos|films|massage|sexed)\/", url
+        ):
             return [url]
         else:
             raise HegreError(
-                "Unsupported URL! Only movies, films, massage and sexed are supported at the moment."
+                "Unsupported URL! Only galleries, movies, films, massage and sexed are supported."
             )
 
     def get_movie_urls(
@@ -162,6 +165,15 @@ class Hegre:
         film_page = BeautifulSoup(film_page_res.text, PARSER)
 
         return HegreMovie.from_film_page(url, film_page)
+
+    def get_gallery_from_url(self, url: str) -> HegreGallery:
+        if "login" not in self._session.cookies:
+            raise HegreError("No active session detected, please login first!")
+
+        gallery_page_res = self._session.get(url)
+        gallery_page = BeautifulSoup(gallery_page_res.text, PARSER)
+
+        return HegreGallery.from_gallery_page(url, gallery_page)
 
     def download_movie(
         self,

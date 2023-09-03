@@ -193,8 +193,9 @@ def download_url(
         hegre.download_movie(
             movie, configuration, progress=progress, task_prefix=task_prefix
         )
-    # TODO: Gallery
-    # ^https?:\/\/www\.hegre\.com\/photos\/
+    elif re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
+        gallery = hegre.get_gallery_from_url(url)
+        # TODO: Gallery download
     else:
         raise HegreError(f"Unsupported URL: {url}!")
 
