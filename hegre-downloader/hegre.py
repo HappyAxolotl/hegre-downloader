@@ -23,6 +23,7 @@ from configuration import Configuration
 
 PARSER = "html.parser"
 MOVIE_PROGRESS = "[green] [{:>4} / {:>4}] Fetching movie URLs"
+GALLERY_PROGRESS = "[green] [{:>4} / {:>4}] Fetching gallery URLs"
 
 
 class Hegre:
@@ -85,7 +86,7 @@ class Hegre:
         sort: SortOption = SortOption.MOST_RECENT,
         show_progress: Optional[bool] = False,
     ) -> list[str]:
-        if re.match(r"^https?:\/\/www\.hegre\.com\/movies", url):
+        if re.match(r"^https?:\/\/www\.hegre\.com\/movies\/?$", url):
             total = self.get_total_movie_count()
             urls = []
 
@@ -99,6 +100,22 @@ class Hegre:
                     )
             else:
                 urls = self.get_movie_urls(total, sort)
+
+            return urls
+        elif re.match(r"^https?:\/\/www\.hegre\.com\/photos\/?$", url):
+            total = self.get_total_gallery_count()
+            urls = []
+
+            if show_progress:
+                with Progress() as progress:
+                    task_id = progress.add_task(
+                        GALLERY_PROGRESS.format(0, total), total=total
+                    )
+                    urls = self.get_gallery_urls(
+                        total, sort, progress=progress, task_id=task_id
+                    )
+            else:
+                urls = self.get_gallery_urls(total, sort)
 
             return urls
         elif re.match(
@@ -148,14 +165,61 @@ class Hegre:
 
         return urls
 
-    def get_total_movie_count(self, sort: SortOption = SortOption.MOST_RECENT) -> int:
+    def get_gallery_urls(
+        self,
+        total: int,
+        sort: SortOption,
+        progress: Optional[Progress] = None,
+        task_id: Optional[TaskID] = None,
+    ) -> list[str]:
+        urls = []
+        page = 1
+
+        while True:
+            galleries_page_res = requests.get(
+                f"https://www.hegre.com/photos?galleries_sort={str(sort)}&galleries_page={page}",
+                cookies=self._cookies,
+            )
+            galleries_page = BeautifulSoup(galleries_page_res.text, PARSER)
+
+            if len(galleries_page.select(".hint")) < 1:
+                urls_on_page = []
+                for item in galleries_page.select("#galleries-listing .item"):
+                    url = "https://www.hegre.com" + item.select_one("a").attrs["href"]
+                    urls_on_page.append(url)
+
+                urls.extend(urls_on_page)
+
+                if progress != None and task_id != None:
+                    progress.update(
+                        task_id,
+                        advance=len(urls_on_page),
+                        description=GALLERY_PROGRESS.format(len(urls), total),
+                    )
+
+                page += 1
+            else:
+                break
+
+        return urls
+
+    def get_total_movie_count(self) -> int:
         movies_page_res = requests.get(
-            f"https://www.hegre.com/movies?films_sort={str(sort)}&films_page=1",
+            f"https://www.hegre.com/movies?films_page=1",
             cookies=self._cookies,
         )
 
         movies_page = BeautifulSoup(movies_page_res.text, PARSER)
         return int(movies_page.select_one("h2 strong").text)
+
+    def get_total_gallery_count(self) -> int:
+        galleries_page_res = requests.get(
+            f"https://www.hegre.com/photos?galleries_page=1",
+            cookies=self._cookies,
+        )
+
+        galleries_page = BeautifulSoup(galleries_page_res.text, PARSER)
+        return int(galleries_page.select_one("h2 strong").text)
 
     def get_movie_from_url(self, url: str) -> HegreMovie:
         if "login" not in self._session.cookies:
