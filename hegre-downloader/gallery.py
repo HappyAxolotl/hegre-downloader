@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, date
+import json
+import os
 from typing import Optional
 import re
 
@@ -9,6 +11,7 @@ from bs4 import BeautifulSoup
 from object_type import ObjectType
 from model import HegreModel
 from exceptions import HegreError
+from helper import HegreJSONEncoder
 
 
 class HegreGallery:
@@ -76,3 +79,25 @@ class HegreGallery:
             px = re.search(r"-(\d{4,5})px", url).group(1)
 
             self.downloads.setdefault(px, url)
+
+    def get_highest_res_download_url(self) -> tuple[int, str]:
+        sorted_resolutions = sorted(self.downloads, reverse=True)
+        return (sorted_resolutions[0], self.downloads[sorted_resolutions[0]])
+
+    def get_download_url_for_res(self, res: Optional[int] = None) -> tuple[int, str]:
+        if res and res not in self.downloads:
+            raise KeyError(
+                f"Resolution {res}px is not available! Available resolutions are: {','.join(self.downloads.keys())}"
+            )
+        elif res:
+            url = self.downloads[res]
+        else:
+            res, url = self.get_highest_res_download_url()
+
+        return res, url
+
+    def write_metadata_file(self, destination_folder: str, filename: str) -> None:
+        metadata_file = os.path.join(destination_folder, filename)
+
+        with open(metadata_file, "w") as file:
+            file.write(json.dumps(self, sort_keys=True, indent=4, cls=HegreJSONEncoder))

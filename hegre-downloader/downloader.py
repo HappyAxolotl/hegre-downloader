@@ -195,7 +195,9 @@ def download_url(
         )
     elif re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
         gallery = hegre.get_gallery_from_url(url)
-        # TODO: Gallery download
+        hegre.download_gallery(
+            gallery, configuration, progress=progress, task_prefix=task_prefix
+        )
     else:
         raise HegreError(f"Unsupported URL: {url}!")
 
