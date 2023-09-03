@@ -247,6 +247,50 @@ class Hegre:
             else:
                 raise e
 
+    def download_gallery(
+        self,
+        gallery: HegreGallery,
+        configuration: Configuration,
+        progress: Optional[Progress] = None,
+        task_prefix: str = "",
+    ) -> None:
+        if "login" not in self._session.cookies:
+            raise HegreError("No active session detected, please login first!")
+
+        # create subfolder for each year, if the movie has a date
+        if gallery.date:
+            dest_folder = os.path.join(
+                configuration.destination_folder, str(gallery.date.year)
+            )
+        else:
+            dest_folder = configuration.destination_folder
+
+        if not os.path.exists(dest_folder):
+            os.makedirs(dest_folder, exist_ok=True)
+
+        _, url = gallery.get_download_url_for_res(configuration.resolution)
+
+        filename, metadata_filename = generate_filename(url, gallery)
+
+        try:
+            if not configuration.no_download:
+                self._download_with_retries(
+                    url,
+                    dest_folder,
+                    filename,
+                    progress,
+                    task_prefix,
+                    max_attempts=configuration.retries + 1,
+                )
+
+            if not configuration.no_meta:
+                gallery.write_metadata_file(dest_folder, metadata_filename)
+        except MovieAlreadyDownloaded as e:
+            if progress:
+                progress.console.print(f"{task_prefix}Skipping '{gallery.title}': {e}")
+            else:
+                raise e
+
     def _download_with_retries(
         self,
         url: str,
@@ -320,19 +364,21 @@ class Hegre:
                         progress.update(task_id, advance=chunk_size)
 
 
-def generate_filename(url: str, movie: HegreMovie) -> tuple[str, str]:
+def generate_filename(
+    url: str, hegre_object: HegreMovie | HegreGallery
+) -> tuple[str, str]:
     original_name = os.path.basename(urlparse(url).path)
     name, _ = os.path.splitext(original_name)
 
-    if movie.date:
-        date_str = movie.date.strftime("%Y.%m.%d")
+    if hegre_object.date:
+        date_str = hegre_object.date.strftime("%Y.%m.%d")
 
         return (
-            f"{date_str}-{movie.code}-{original_name}",
-            f"{date_str}-{movie.code}-{name}.json",
+            f"{date_str}-{hegre_object.code}-{original_name}",
+            f"{date_str}-{hegre_object.code}-{name}.json",
         )
     else:
         return (
-            f"{movie.code}-{original_name}",
-            f"{movie.code}-{name}.json",
+            f"{hegre_object.code}-{original_name}",
+            f"{hegre_object.code}-{name}.json",
         )
