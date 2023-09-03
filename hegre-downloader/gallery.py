@@ -88,7 +88,6 @@ class HegreGallery:
         ]
         if url_result := re.search(r"(http.*)\?", bg_image_url):
             self.cover_url = url_result.group(1)
-            print(self.cover_url)
 
     def get_highest_res_download_url(self) -> tuple[int, str]:
         sorted_resolutions = sorted(self.downloads, reverse=True)

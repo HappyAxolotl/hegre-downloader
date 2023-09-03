@@ -118,6 +118,8 @@ class Hegre:
                 urls = self.get_gallery_urls(total, sort)
 
             return urls
+        elif re.match(r"^https?:\/\/www\.hegre\.com\/models\/[a-z-]+\/?$", url):
+            return self.get_model_urls(url)
         elif re.match(
             r"^https?:\/\/www\.hegre\.com\/(photos|films|massage|sexed)\/", url
         ):
@@ -126,6 +128,22 @@ class Hegre:
             raise HegreError(
                 "Unsupported URL! Only galleries, movies, films, massage and sexed are supported."
             )
+
+    def get_model_urls(self, url: str) -> list[str]:
+        urls = []
+
+        model_page_res = requests.get(url, cookies=self._cookies)
+        model_page = BeautifulSoup(model_page_res.text, PARSER)
+
+        for item in model_page.select("#galleries-listing .item"):
+            url = "https://www.hegre.com" + item.select_one("a").attrs["href"]
+            urls.append(url)
+
+        for item in model_page.select("#films-listing .item"):
+            url = "https://www.hegre.com" + item.select_one("a").attrs["href"]
+            urls.append(url)
+
+        return urls
 
     def get_movie_urls(
         self,
