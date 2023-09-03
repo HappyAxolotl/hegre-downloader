@@ -1,16 +1,17 @@
 import json
+import math
 
 from datetime import date
 from typing import Any
 
-from movie import MovieType
+from movie import ObjectType
 
 
 class HegreJSONEncoder(json.JSONEncoder):
     def default(self, o: Any) -> Any:
         if isinstance(o, date):
             return o.isoformat()
-        elif isinstance(o, MovieType):
+        elif isinstance(o, ObjectType):
             return str(o)
 
         return o.__dict__
@@ -39,3 +40,24 @@ def duration_to_seconds(duration: str, delimiter: str = ":") -> int:
             return int(elements[0])
         case _:
             raise ValueError("Could not parse duration string into seconds")
+
+
+def convert_size(size_bytes: int) -> str:
+    """Convert a file size in byte into a human readable string
+    see: https://stackoverflow.com/a/14822210
+
+    Args:
+        size_bytes (int): Number of bytes
+
+    Returns:
+        str: Number of bytes as human readable string
+    """
+    if size_bytes == 0:
+        return "0B"
+
+    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    s = round(size_bytes / p, 2)
+
+    return "%s %s" % (s, size_name[i])

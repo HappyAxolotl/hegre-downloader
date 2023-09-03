@@ -10,7 +10,7 @@ import re
 import json
 
 from model import HegreModel
-from movie_type import MovieType
+from object_type import ObjectType
 from helper import duration_to_seconds
 from exceptions import HegreError
 from helper import HegreJSONEncoder
@@ -23,10 +23,10 @@ class HegreMovie:
     code: Optional[int]
     duration: Optional[int]
     cover_url: Optional[str]
-    screengrabs_url = Optional[str]
+    screengrabs_url: Optional[str]
     date: Optional[date]
     description: Optional[str]
-    type: Optional[MovieType]
+    type: Optional[ObjectType]
 
     tags: list[str]
     models: list[HegreModel]
@@ -53,14 +53,14 @@ class HegreMovie:
         self.trailers = dict()
 
     def __str__(self) -> str:
-        return f"{self.title} [code: {self.code}, duration: {self.duration}s]"
+        return f"{self.date} {self.title} [{self.code}]"
 
     @staticmethod
     def from_film_page(url: str, film_page: BeautifulSoup) -> HegreMovie:
         hm = HegreMovie(url)
 
         if match := re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage)\/", url):
-            type = MovieType.from_str(match.group(1))
+            type = ObjectType.from_str(match.group(1))
             hm.parse_details_from_films_or_massage_page(type, film_page)
         elif re.match(r"^https?:\/\/www\.hegre\.com\/sexed\/", url):
             hm.parse_details_from_sexed_page(film_page)
@@ -76,7 +76,7 @@ class HegreMovie:
             film_page.select_one(".film-header > div > strong").text.split()[0]
         )
         self.description = film_page.select_one(".film-header .intro").text.strip()
-        self.type = MovieType.SEXED
+        self.type = ObjectType.SEXED
         # no upload date available!
         # no models available!
 
@@ -109,7 +109,7 @@ class HegreMovie:
             self.trailers.setdefault(res, trailer_url)
 
     def parse_details_from_films_or_massage_page(
-        self, type: MovieType, film_page: BeautifulSoup
+        self, type: ObjectType, film_page: BeautifulSoup
     ) -> None:
         self.type = type
         self.title = film_page.select_one(".title > .translated-text").text.strip()
@@ -118,7 +118,9 @@ class HegreMovie:
             film_page.select_one(".format-details").text.split()[1]
         )
         self.description = film_page.select_one(".massage-copy").text.strip()
-        self.date = datetime.strptime(film_page.select_one(".date").text, "%B %d, %Y")
+        self.date = datetime.strptime(
+            film_page.select_one(".date").text, "%B %d, %Y"
+        ).date()
 
         # cover image
         bg_image_url = film_page.select_one(".video-player-wrapper").attrs["style"]
