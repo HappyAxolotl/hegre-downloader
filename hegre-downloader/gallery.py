@@ -21,6 +21,7 @@ class HegreGallery:
     title: Optional[str]
     code: Optional[int]
     date: Optional[date]
+    cover_url: Optional[str]
 
     tags: list[str]
     models: list[HegreModel]
@@ -33,6 +34,7 @@ class HegreGallery:
         self.title = None
         self.code = None
         self.date = None
+        self.cover_url = None
 
         self.tags = list()
         self.models = list()
@@ -79,6 +81,14 @@ class HegreGallery:
             px = int(re.search(r"-(\d{4,5})px", url).group(1))
 
             self.downloads.setdefault(px, url)
+
+        # cover image
+        bg_image_url = gallery_page.select_one(".record-content > .non-members").attrs[
+            "style"
+        ]
+        if url_result := re.search(r"(http.*)\?", bg_image_url):
+            self.cover_url = url_result.group(1)
+            print(self.cover_url)
 
     def get_highest_res_download_url(self) -> tuple[int, str]:
         sorted_resolutions = sorted(self.downloads, reverse=True)

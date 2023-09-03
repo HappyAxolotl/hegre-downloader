@@ -231,10 +231,7 @@ class Hegre:
         return HegreMovie.from_film_page(url, film_page)
 
     def get_gallery_from_url(self, url: str) -> HegreGallery:
-        if "login" not in self._session.cookies:
-            raise HegreError("No active session detected, please login first!")
-
-        gallery_page_res = self._session.get(url)
+        gallery_page_res = requests.get(url, cookies=self._cookies)
         gallery_page = BeautifulSoup(gallery_page_res.text, PARSER)
 
         return HegreGallery.from_gallery_page(url, gallery_page)
@@ -335,6 +332,7 @@ class Hegre:
         _, url = gallery.get_download_url_for_res(configuration.resolution)
 
         filename, metadata_filename = generate_filename(url, gallery)
+        thumbnail, _ = generate_filename(gallery.cover_url, gallery)
 
         try:
             if not configuration.no_download:
@@ -349,6 +347,11 @@ class Hegre:
 
             if not configuration.no_meta:
                 gallery.write_metadata_file(dest_folder, metadata_filename)
+
+            if not configuration.no_thumb:
+                self._download_file(
+                    gallery.cover_url, os.path.join(dest_folder, thumbnail)
+                )
         except MovieAlreadyDownloaded as e:
             if progress:
                 progress.console.print(f"{task_prefix}Skipping '{gallery.title}': {e}")
