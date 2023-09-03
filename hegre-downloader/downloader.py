@@ -23,31 +23,27 @@ def load_config_from_args() -> Configuration:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""Downloader and metadata extractor for hegre.com
 
-You can specify one or more URLs that will be downloaded. If you do not provide a URL, it will download all movies. The following URLs are supported:
+You can specify one or more URLs that will be downloaded. The following URLs are supported:
+- Single movie:
+    https://www.hegre.com/films/title-of-the-film
+    https://www.hegre.com/massage/title-of-the-massage-film
+    https://www.hegre.com/sexed/title-of-the-sexed-film
 - All movies:
     https://www.hegre.com/movies
-- Single movie of type film:
-    https://www.hegre.com/films/title-of-the-film
-    https://www.hegre.com/films/69
-- Single movie of type massage:
-    https://www.hegre.com/massage/title-of-the-massage-film
-    https://www.hegre.com/massage/69
-- Single movie of type sexed:
-    https://www.hegre.com/sexed/title-of-the-sexed-film
-    https://www.hegre.com/sexed/69
-- All galleries:
-    https://www.hegre.com/photos
 - Single gallery:
     https://www.hegre.com/photos/title-of-the-gallery
-    https://www.hegre.com/photos/69
+- All galleries:
+    https://www.hegre.com/photos
+- All movies and galleries of a model:
+    https://www.hegre.com/models/name-of-model
 """,
     )
     parser.add_argument(
         "urls",
         metavar="URL",
-        nargs="*",
-        help="Hegre URL(s) to download. If none is specified, defaults to https://www.hegre.com/movies",
-        default=["https://www.hegre.com/movies"],
+        nargs="+",
+        help="Hegre URL(s) to download",
+        action="store",
     )
     parser.add_argument(
         "-d",

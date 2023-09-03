@@ -29,30 +29,26 @@ pip install -r requirements.txt
 
 ## 🧑‍💻 Usage as CLI tool
 ```
-usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [-p NUM_OF_TASKS] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] [URL ...]
+usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [-p NUM_OF_TASKS] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] URL [URL ...]
 
 Downloader and metadata extractor for hegre.com
 
-You can specify one or more URLs that will be downloaded. If you do not provide a URL, it will download all movies. The following URLs are supported:
+You can specify one or more URLs that will be downloaded. The following URLs are supported:
+- Single movie:
+    https://www.hegre.com/films/title-of-the-film
+    https://www.hegre.com/massage/title-of-the-massage-film
+    https://www.hegre.com/sexed/title-of-the-sexed-film
 - All movies:
     https://www.hegre.com/movies
-- Single movie of type film:
-    https://www.hegre.com/films/title-of-the-film
-    https://www.hegre.com/films/69
-- Single movie of type massage:
-    https://www.hegre.com/massage/title-of-the-massage-film
-    https://www.hegre.com/massage/69
-- Single movie of type sexed:
-    https://www.hegre.com/sexed/title-of-the-sexed-film
-    https://www.hegre.com/sexed/69
-- All galleries:
-    https://www.hegre.com/photos
 - Single gallery:
     https://www.hegre.com/photos/title-of-the-gallery
-    https://www.hegre.com/photos/69
+- All galleries:
+    https://www.hegre.com/photos
+- All movies and galleries of a model:
+    https://www.hegre.com/models/name-of-model
 
 positional arguments:
-  URL                   Hegre URL(s) to download. If none is specified, defaults to https://www.hegre.com/movies
+  URL                   Hegre URL(s) to download
 
 options:
   -h, --help            show this help message and exit
@@ -85,9 +81,11 @@ pre-commit install
 - Show filesize while downloading
 - Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
 - Custom filenames with format strings
+- Separation between resolution of galleries (`px`) and movies (`p`) (`-r` flag)
+- Subtitle files should match the schema `{movie_name}.{language_code}.ext`
 - More robustness on errors (e.g. HTTP 404)
 - Exit gracefully on SIGINT (`Ctrl+C`)
 - Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
-- Logout
+- Logout (end session)
 - Documentation
 - Unit testing
