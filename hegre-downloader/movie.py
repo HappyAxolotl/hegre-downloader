@@ -55,6 +55,9 @@ class HegreMovie:
     def __str__(self) -> str:
         return f"{self.date} {self.title} [{self.code}]"
 
+    def archive_id(self) -> str:
+        return f"{self.type} {self.code}"
+
     @staticmethod
     def from_film_page(url: str, film_page: BeautifulSoup) -> HegreMovie:
         hm = HegreMovie(url)

@@ -4,17 +4,18 @@ import sys
 import argparse
 import pathlib
 
-from hegre import Hegre
+from hegre import Hegre, HegreMovie, HegreGallery
 from sort_option import SortOption
 from exceptions import HegreError
 from configuration import Configuration
 
 from dotenv import load_dotenv
-from rich.progress import Progress, TaskID
+from rich.progress import Progress
 from rich.console import Console
 from concurrent.futures import ThreadPoolExecutor
 
 DOWNLOAD_TASK_PREFIX = "[{:>4} / {:>4}] "
+archive: set[str] = set()
 
 
 def load_config_from_args() -> Configuration:
@@ -117,6 +118,14 @@ You can specify one or more URLs that will be downloaded. The following URLs are
     parser.add_argument(
         "--trailer", help="Download trailer", action="store_true", default=False
     )
+    parser.add_argument(
+        "--download-archive",
+        metavar="FILE",
+        action="store",
+        type=pathlib.Path,
+        dest="download_archive",
+        help="Download only videos/galleries not listed in the archive file. Record the IDs of all downloaded videos/galleries in it",
+    )
 
     args = parser.parse_args()
 
@@ -143,6 +152,7 @@ You can specify one or more URLs that will be downloaded. The following URLs are
         trailer=args.trailer,
         resolution=args.r,
         subtitles=subtitles,
+        download_archive=args.download_archive,
     )
 
 
@@ -188,20 +198,58 @@ def download_urls(urls: list[str], configuration: Configuration) -> None:
 def download_url(
     url: str, configuration: Configuration, task_prefix: str, progress: Progress
 ) -> None:
-    # Movie
     if re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage|sexed)\/", url):
         movie = hegre.get_movie_from_url(url)
-        hegre.download_movie(
-            movie, configuration, progress=progress, task_prefix=task_prefix
-        )
-    # Gallery
+        if movie.archive_id() in archive:
+            console.print(
+                f"Movie '{movie.title}' [{movie.code}] has already been recorded in the archive"
+            )
+        else:
+            hegre.download_movie(
+                movie, configuration, progress=progress, task_prefix=task_prefix
+            )
+            record_download_archive(configuration, movie)
     elif re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
         gallery = hegre.get_gallery_from_url(url)
-        hegre.download_gallery(
-            gallery, configuration, progress=progress, task_prefix=task_prefix
-        )
+        if gallery.archive_id() in archive:
+            console.print(
+                f"Gallery '{gallery.title}' [{gallery.code}] has already been recorded in the archive"
+            )
+        else:
+            hegre.download_gallery(
+                gallery, configuration, progress=progress, task_prefix=task_prefix
+            )
+            record_download_archive(configuration, gallery)
     else:
         raise HegreError(f"Unsupported URL: {url}!")
+
+
+def load_download_archive(filename: str) -> None:
+    """Load download archive from file, if a filename is specified"""
+    if not filename or not os.path.exists(filename):
+        return
+
+    try:
+        with open(filename, "r", encoding="utf-8") as archive_file:
+            for line in archive_file:
+                archive.add(line.strip())
+    except OSError:
+        raise
+
+
+def record_download_archive(
+    configuration: Configuration,
+    hegre_object: HegreMovie | HegreGallery,
+) -> None:
+    if configuration.download_archive is None:
+        return
+
+    id = hegre_object.archive_id()
+
+    with open(configuration.download_archive, "a", encoding="utf-8") as archive_file:
+        archive_file.write(id + "\n")
+
+    archive.add(id)
 
 
 if __name__ == "__main__":
@@ -209,6 +257,7 @@ if __name__ == "__main__":
     console = Console()
 
     configuration = load_config_from_args()
+    load_download_archive(configuration.download_archive)
 
     username = os.environ.get("username")
     password = os.environ.get("password")
