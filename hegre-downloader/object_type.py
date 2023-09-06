@@ -24,4 +24,4 @@ class ObjectType(Enum):
             case ObjectType.PHOTOS.value:
                 return ObjectType.PHOTOS
             case _:
-                raise ValueError(f"Invalid movie type string '{type_str}'")
+                raise ValueError(f"Invalid Hegre object type string '{type_str}'")

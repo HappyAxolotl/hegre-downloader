@@ -20,6 +20,7 @@ class Configuration:
 
     resolution: Optional[int]
     subtitles: Optional[list[str]]
+    download_archive: Optional[str]
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class Configuration:
         trailer: bool = False,
         resolution: Optional[int] = None,
         subtitles: Optional[list[str]] = None,
+        download_archive: Optional[str] = None,
     ) -> None:
         self.urls = urls
         self.destination_folder = destination_folder
@@ -52,3 +54,4 @@ class Configuration:
 
         self.resolution = resolution
         self.subtitles = subtitles
+        self.download_archive = download_archive

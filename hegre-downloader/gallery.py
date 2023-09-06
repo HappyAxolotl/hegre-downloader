@@ -43,6 +43,9 @@ class HegreGallery:
     def __str__(self) -> str:
         return f"{self.date} {self.title} [{self.code}]"
 
+    def archive_id(self) -> str:
+        return f"{self.type} {self.code}"
+
     @staticmethod
     def from_gallery_page(url: str, gallery_page: BeautifulSoup) -> HegreGallery:
         hg = HegreGallery(url)
