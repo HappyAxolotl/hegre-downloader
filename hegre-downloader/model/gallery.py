@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, date
-import json
-import os
-from typing import Optional
+from datetime import datetime
 import re
 
 from bs4 import BeautifulSoup
@@ -12,7 +9,6 @@ from model.object_type import ObjectType
 from model.model import HegreModel
 from model.hegre_object import HegreObject
 from exceptions import HegreError
-from helper import HegreJSONEncoder
 
 
 class HegreGallery(HegreObject):
@@ -28,12 +24,6 @@ class HegreGallery(HegreObject):
         self.tags = list()
         self.models = list()
         self.downloads = dict()
-
-    def __str__(self) -> str:
-        return f"{self.date} {self.title} [{self.code}]"
-
-    def archive_id(self) -> str:
-        return f"{self.type} {self.code}"
 
     @staticmethod
     def from_gallery_page(url: str, gallery_page: BeautifulSoup) -> HegreGallery:
@@ -80,25 +70,3 @@ class HegreGallery(HegreObject):
         ]
         if url_result := re.search(r"(http.*)\?", bg_image_url):
             self.cover_url = url_result.group(1)
-
-    def get_highest_res_download_url(self) -> tuple[int, str]:
-        sorted_resolutions = sorted(self.downloads, reverse=True)
-        return (sorted_resolutions[0], self.downloads[sorted_resolutions[0]])
-
-    def get_download_url_for_res(self, res: Optional[int] = None) -> tuple[int, str]:
-        if res and res not in self.downloads:
-            raise KeyError(
-                f"Resolution {res}px is not available! Available resolutions are: {','.join(self.downloads.keys())}"
-            )
-        elif res:
-            url = self.downloads[res]
-        else:
-            res, url = self.get_highest_res_download_url()
-
-        return res, url
-
-    def write_metadata_file(self, destination_folder: str, filename: str) -> None:
-        metadata_file = os.path.join(destination_folder, filename)
-
-        with open(metadata_file, "w") as file:
-            file.write(json.dumps(self, sort_keys=True, indent=4, cls=HegreJSONEncoder))
