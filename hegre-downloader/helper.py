@@ -4,7 +4,7 @@ import math
 from datetime import date
 from typing import Any
 
-from movie import ObjectType
+from model.movie import ObjectType
 
 
 class HegreJSONEncoder(json.JSONEncoder):
