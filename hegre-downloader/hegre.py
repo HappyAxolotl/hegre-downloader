@@ -14,8 +14,8 @@ from requests.exceptions import ChunkedEncodingError
 from pathlib import Path
 from typing import Optional
 
-from movie import HegreMovie
-from gallery import HegreGallery
+from model.movie import HegreMovie
+from model.gallery import HegreGallery
 from sort_option import SortOption
 from exceptions import HegreError, MovieAlreadyDownloaded
 from configuration import Configuration

@@ -8,25 +8,14 @@ import re
 
 from bs4 import BeautifulSoup
 
-from object_type import ObjectType
-from model import HegreModel
+from model.object_type import ObjectType
+from model.model import HegreModel
+from model.hegre_object import HegreObject
 from exceptions import HegreError
 from helper import HegreJSONEncoder
 
 
-class HegreGallery:
-    url: str
-    type: ObjectType
-
-    title: Optional[str]
-    code: Optional[int]
-    date: Optional[date]
-    cover_url: Optional[str]
-
-    tags: list[str]
-    models: list[HegreModel]
-    downloads: dict[int, str]
-
+class HegreGallery(HegreObject):
     def __init__(self, url: str) -> None:
         self.url = url
         self.type = ObjectType.PHOTOS

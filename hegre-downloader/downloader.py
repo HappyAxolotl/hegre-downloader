@@ -4,7 +4,9 @@ import sys
 import argparse
 import pathlib
 
-from hegre import Hegre, HegreMovie, HegreGallery
+from hegre import Hegre
+from model.movie import HegreMovie
+from model.gallery import HegreGallery
 from sort_option import SortOption
 from exceptions import HegreError
 from configuration import Configuration

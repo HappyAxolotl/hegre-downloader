@@ -9,28 +9,19 @@ import os
 import re
 import json
 
-from model import HegreModel
-from object_type import ObjectType
+from model.model import HegreModel
+from model.object_type import ObjectType
+from model.hegre_object import HegreObject
 from helper import duration_to_seconds
 from exceptions import HegreError
 from helper import HegreJSONEncoder
 
 
-class HegreMovie:
-    url: str
-
-    title: Optional[str]
-    code: Optional[int]
+class HegreMovie(HegreObject):
     duration: Optional[int]
-    cover_url: Optional[str]
     screengrabs_url: Optional[str]
-    date: Optional[date]
     description: Optional[str]
-    type: Optional[ObjectType]
 
-    tags: list[str]
-    models: list[HegreModel]
-    downloads: dict[int, str]
     subtitles: dict[str, str]
     trailers: dict[int, str]
 
