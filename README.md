@@ -78,8 +78,9 @@ pre-commit install
 ```
 
 ## 💡 Ideas
-- Show filesize while downloading
-- Save downloaded scene codes (similar to the [`--download-archive` flag from youtube-dlp](https://github.com/yt-dlp/yt-dlp#video-selection))
+- Rewrite download status display in downloader:
+  - Separate progress bar for each task i.e. show progress of subtasks such as trailer, screengrabs and subtitle download
+  - Show filesize while downloading
 - Custom filenames with format strings
 - Separation between resolution of galleries (`px`) and movies (`p`) (`-r` flag)
 - Subtitle files should match the schema `{movie_name}.{language_code}.ext`
