@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,11 +8,14 @@ authors = [{ name = "HappyAxolotl" }]
 description = "Downloader and metadata extractor for hegre.com"
 keywords = ["metadata-extraction", "downloader"]
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = { text = "Unlicense" }
 dependencies = ["beautifulsoup4", "python-dotenv", "requests", "rich"]
-optional-dependencies = { "dev" = ["black", "pre-commit"] }
+optional-dependencies = { "dev" = ["black", "pre-commit", "pytest"] }
 dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/HappyAxolotl/hegre-downloader"
+
+[tool.pytest.ini_options]
+pythonpath = "src"

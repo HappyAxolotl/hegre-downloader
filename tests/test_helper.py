@@ -1,4 +1,5 @@
-from helper import duration_to_seconds, convert_size
+from hegre_downloader.helper import duration_to_seconds, convert_size
+
 import pytest
 
 

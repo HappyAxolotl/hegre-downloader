@@ -5,10 +5,10 @@ import re
 
 from bs4 import BeautifulSoup
 
-from model.object_type import ObjectType
-from model.model import HegreModel
-from model.hegre_object import HegreObject
-from exceptions import HegreError
+from hegre_downloader.model.object_type import ObjectType
+from hegre_downloader.model.model import HegreModel
+from hegre_downloader.model.hegre_object import HegreObject
+from hegre_downloader.exceptions import HegreError
 
 
 class HegreGallery(HegreObject):

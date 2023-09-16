@@ -1,5 +1,5 @@
-from model.object_type import ObjectType
-from model.hegre_object import HegreObject
+from hegre_downloader.model.hegre_object import HegreObject
+from hegre_downloader.model.object_type import ObjectType
 
 import pytest
 

@@ -8,11 +8,11 @@ from typing import Optional
 import re
 import json
 
-from model.model import HegreModel
-from model.object_type import ObjectType
-from model.hegre_object import HegreObject
-from helper import duration_to_seconds
-from exceptions import HegreError
+from hegre_downloader.model.model import HegreModel
+from hegre_downloader.model.object_type import ObjectType
+from hegre_downloader.model.hegre_object import HegreObject
+from hegre_downloader.helper import duration_to_seconds
+from hegre_downloader.exceptions import HegreError
 
 
 class HegreMovie(HegreObject):
@@ -159,12 +159,15 @@ class HegreMovie(HegreObject):
                 url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
                 self.downloads.setdefault(res, url)
 
-            subtitles: list[dict[str, str]] = video_player_json["clip"]["subtitles"]
-            for subtitle in subtitles:
-                label = subtitle["label"].lower()
-                url = subtitle["src"]
-                url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
-                self.subtitles.setdefault(label, url)
+            # subtitles may not be available (e.g. if the page was downloaded without a login)
+            if subtitles := video_player_json["clip"]["subtitles"]:
+                for subtitle in subtitles:
+                    label = subtitle["label"].lower()
+                    url = subtitle["src"]
+                    url = re.search(r"(http.*)\?", url).group(
+                        1
+                    )  # remove all parameters
+                    self.subtitles.setdefault(label, url)
 
     def get_subtitle_download_urls(self, languages: list[str]) -> list[str]:
         urls = []
@@ -184,7 +187,7 @@ class HegreMovie(HegreObject):
     ) -> tuple[int, str]:
         if res and res not in self.trailers:
             raise KeyError(
-                f"Resolution {res}p is not available! Available resolutions are: {','.join(self.trailers.keys())}"
+                f"Resolution {res}p is not available! Available resolutions are: {','.join(map(str, self.trailers.keys()))}"
             )
         elif res:
             url = self.trailers[res]

@@ -14,11 +14,11 @@ from requests.exceptions import ChunkedEncodingError
 from pathlib import Path
 from typing import Optional
 
-from model.movie import HegreMovie
-from model.gallery import HegreGallery
-from sort_option import SortOption
-from exceptions import HegreError, MovieAlreadyDownloaded
-from configuration import Configuration
+from hegre_downloader.model.movie import HegreMovie
+from hegre_downloader.model.gallery import HegreGallery
+from hegre_downloader.sort_option import SortOption
+from hegre_downloader.exceptions import HegreError, MovieAlreadyDownloaded
+from hegre_downloader.configuration import Configuration
 
 
 PARSER = "html.parser"

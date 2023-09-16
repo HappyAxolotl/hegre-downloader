@@ -2,7 +2,7 @@ from json import JSONEncoder
 from datetime import date
 from typing import Any
 
-from model.object_type import ObjectType
+from hegre_downloader.model.object_type import ObjectType
 
 
 class HegreJSONEncoder(JSONEncoder):

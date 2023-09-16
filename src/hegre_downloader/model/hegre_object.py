@@ -3,9 +3,9 @@ from datetime import date
 import json
 import os
 
-from model.object_type import ObjectType
-from hegre_json_encoder import HegreJSONEncoder
-from model.model import HegreModel
+from hegre_downloader.model.object_type import ObjectType
+from hegre_downloader.hegre_json_encoder import HegreJSONEncoder
+from hegre_downloader.model.model import HegreModel
 
 
 class HegreObject:

@@ -1,7 +1,7 @@
 from typing import Optional
 from pathlib import Path
 
-from sort_option import SortOption
+from hegre_downloader.sort_option import SortOption
 
 
 class Configuration:
