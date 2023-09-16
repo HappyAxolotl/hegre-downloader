@@ -1,20 +1,4 @@
-import json
 import math
-
-from datetime import date
-from typing import Any
-
-from model.movie import ObjectType
-
-
-class HegreJSONEncoder(json.JSONEncoder):
-    def default(self, o: Any) -> Any:
-        if isinstance(o, date):
-            return o.isoformat()
-        elif isinstance(o, ObjectType):
-            return str(o)
-
-        return o.__dict__
 
 
 def duration_to_seconds(duration: str, delimiter: str = ":") -> int:

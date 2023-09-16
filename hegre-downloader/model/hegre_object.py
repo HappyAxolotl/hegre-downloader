@@ -4,8 +4,8 @@ import json
 import os
 
 from model.object_type import ObjectType
+from hegre_json_encoder import HegreJSONEncoder
 from model.model import HegreModel
-from helper import HegreJSONEncoder
 
 
 class HegreObject:
@@ -41,7 +41,7 @@ class HegreObject:
     def get_download_url_for_res(self, res: Optional[int] = None) -> tuple[int, str]:
         if res and res not in self.downloads:
             raise KeyError(
-                f"Resolution {res}p/px is not available! Available resolutions are: {','.join(self.downloads.keys())}"
+                f"Resolution {res}p/px is not available! Available resolutions are: {','.join(map(str, self.downloads.keys()))}"
             )
         elif res:
             url = self.downloads[res]
