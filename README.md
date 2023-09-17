@@ -15,12 +15,15 @@ Downloader and metadata extractor for `hegre.com`, written in python. This tool 
 # setup venv
 python3 -m venv --upgrade-deps .venv
 
-# switch to venv 
+# switch to venv
 # Linux
 source .venv/bin/activate
 
 # Windows (powershell)
 .venv\Scripts\Activate.ps1
+
+# set PYTHONPATH
+export PYTHONPATH=$(pwd)/src
 ```
 - Install requirements:
 ```sh
