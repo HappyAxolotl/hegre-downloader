@@ -3,14 +3,13 @@ from __future__ import annotations
 import os
 import re
 import json
-import requests
+import httpx
 
 
 from bs4 import BeautifulSoup
 from rich.progress import Progress, TaskID
 from urllib.parse import urlparse
-from requests import HTTPError
-from requests.exceptions import ChunkedEncodingError
+from httpx import HTTPError, StreamError
 from pathlib import Path
 from typing import Optional
 
@@ -27,13 +26,13 @@ GALLERY_PROGRESS = "[green] [{:>4} / {:>4}] Fetching gallery URLs"
 
 
 class Hegre:
-    _session: requests.Session
+    _session: httpx.Client
     _cookies: dict[str, str]
 
     def __init__(
         self, locale: str = "en", country: str = "US", width: int = 3840
     ) -> None:
-        self._session = requests.Session()
+        self._session = httpx.Client()
         self._cookies = {"locale": locale, "country": country, "_width": str(width)}
 
         for k, v in self._cookies.items():
@@ -121,18 +120,18 @@ class Hegre:
         elif re.match(r"^https?:\/\/www\.hegre\.com\/models\/[a-z-]+\/?$", url):
             return self.get_model_urls(url)
         elif re.match(
-            r"^https?:\/\/www\.hegre\.com\/(photos|films|massage|sexed)\/", url
+            r"^https?:\/\/www\.hegre\.com\/(photos|films|massage|sexed|orgasms)\/", url
         ):
             return [url]
         else:
             raise HegreError(
-                "Unsupported URL! Only galleries, movies, films, massage and sexed are supported."
+                "Unsupported URL! Only galleries, movies, films, massage, sexed and orgasms are supported."
             )
 
     def get_model_urls(self, url: str) -> list[str]:
         urls = []
 
-        model_page_res = requests.get(url, cookies=self._cookies)
+        model_page_res = httpx.get(url, cookies=self._cookies)
         model_page = BeautifulSoup(model_page_res.text, PARSER)
 
         for item in model_page.select("#galleries-listing .item"):
@@ -156,7 +155,7 @@ class Hegre:
         page = 1
 
         while True:
-            movies_page_res = requests.get(
+            movies_page_res = httpx.get(
                 f"https://www.hegre.com/movies?films_sort={str(sort)}&films_page={page}",
                 cookies=self._cookies,
             )
@@ -194,7 +193,7 @@ class Hegre:
         page = 1
 
         while True:
-            galleries_page_res = requests.get(
+            galleries_page_res = httpx.get(
                 f"https://www.hegre.com/photos?galleries_sort={str(sort)}&galleries_page={page}",
                 cookies=self._cookies,
             )
@@ -222,7 +221,7 @@ class Hegre:
         return urls
 
     def get_total_movie_count(self) -> int:
-        movies_page_res = requests.get(
+        movies_page_res = httpx.get(
             f"https://www.hegre.com/movies?films_page=1",
             cookies=self._cookies,
         )
@@ -231,7 +230,7 @@ class Hegre:
         return int(movies_page.select_one("h2 strong").text)
 
     def get_total_gallery_count(self) -> int:
-        galleries_page_res = requests.get(
+        galleries_page_res = httpx.get(
             f"https://www.hegre.com/photos?galleries_page=1",
             cookies=self._cookies,
         )
@@ -249,7 +248,7 @@ class Hegre:
         return HegreMovie.from_film_page(url, film_page)
 
     def get_gallery_from_url(self, url: str) -> HegreGallery:
-        gallery_page_res = requests.get(url, cookies=self._cookies)
+        gallery_page_res = httpx.get(url, cookies=self._cookies)
         gallery_page = BeautifulSoup(gallery_page_res.text, PARSER)
 
         return HegreGallery.from_gallery_page(url, gallery_page)
@@ -400,7 +399,7 @@ class Hegre:
             try:
                 self._download_file(url, temp_file, progress, task_id)
                 failed = False
-            except (HTTPError, ChunkedEncodingError) as e:
+            except (HTTPError, StreamError) as e:
                 os.remove(temp_file)
 
                 if attempt + 1 > max_attempts:
@@ -433,7 +432,7 @@ class Hegre:
         task_id: Optional[TaskID] = None,
         chunk_size: int = 16 * 1024,
     ):
-        with self._session.get(url, stream=True) as stream:
+        with self._session.stream("GET", url) as stream:
             stream.raise_for_status()
 
             with open(dest_file, "wb") as file:
@@ -443,7 +442,7 @@ class Hegre:
                     progress.update(task_id, total=content_length)
                     progress.start_task(task_id)
 
-                for chunk in stream.iter_content(chunk_size=chunk_size):
+                for chunk in stream.iter_bytes(chunk_size=chunk_size):
                     file.write(chunk)
                     if progress and task_id != None:
                         progress.update(task_id, advance=chunk_size)

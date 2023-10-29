@@ -6,7 +6,7 @@ Downloader and metadata extractor for `hegre.com`, written in python. This tool 
 **Disclaimer**: This is my first real python project, so there's probably a lot of room for improvements. Also it is mainly developed for my personal purpose of downloading videos.
 
 ## 🪛 Setup
-- Make sure that you have git and python 3.11 installed
+- Make sure that you have git and python >= 3.10 installed
 - Clone this repository
 - Create a copy of `.env.dist` and name it `.env`
 - Fill in your hegre.com account credentials in `.env`
