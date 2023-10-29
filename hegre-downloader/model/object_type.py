@@ -7,6 +7,7 @@ class ObjectType(Enum):
     FILM = "films"
     MASSAGE = "massage"
     SEXED = "sexed"
+    ORGASMS = "orgasms"
     PHOTOS = "photos"
 
     def __str__(self) -> str:
@@ -21,6 +22,8 @@ class ObjectType(Enum):
                 return ObjectType.MASSAGE
             case ObjectType.SEXED.value:
                 return ObjectType.SEXED
+            case ObjectType.ORGASMS.value:
+                return ObjectType.ORGASMS
             case ObjectType.PHOTOS.value:
                 return ObjectType.PHOTOS
             case _:

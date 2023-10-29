@@ -45,7 +45,9 @@ class HegreMovie(HegreObject):
     def from_film_page(url: str, film_page: BeautifulSoup) -> HegreMovie:
         hm = HegreMovie(url)
 
-        if match := re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage)\/", url):
+        if match := re.match(
+            r"^https?:\/\/www\.hegre\.com\/(films|massage|orgasms)\/", url
+        ):
             type = ObjectType.from_str(match.group(1))
             hm.parse_details_from_films_or_massage_page(type, film_page)
         elif re.match(r"^https?:\/\/www\.hegre\.com\/sexed\/", url):

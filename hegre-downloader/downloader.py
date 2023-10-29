@@ -200,7 +200,7 @@ def download_urls(urls: list[str], configuration: Configuration) -> None:
 def download_url(
     url: str, configuration: Configuration, task_prefix: str, progress: Progress
 ) -> None:
-    if re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage|sexed)\/", url):
+    if re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage|sexed|orgasms)\/", url):
         movie = hegre.get_movie_from_url(url)
         if movie.archive_id() in archive:
             console.print(
