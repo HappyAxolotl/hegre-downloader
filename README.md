@@ -6,7 +6,7 @@ Downloader and metadata extractor for `hegre.com`, written in python. This tool 
 **Disclaimer**: This is my first real python project, so there's probably a lot of room for improvements. Also it is mainly developed for my personal purpose of downloading videos.
 
 ## 🪛 Setup
-- Make sure that you have git and python >= 3.10 installed
+- Make sure that you have git and python >= 3.11 installed
 - Clone this repository
 - Create a copy of `.env.dist` and name it `.env`
 - Fill in your hegre.com account credentials in `.env`
@@ -26,10 +26,20 @@ source .venv/bin/activate
 ```sh
 pip install -r requirements.txt
 ```
+- Run the tool from the `hegre-downloader` subfolder:
+```sh
+cd hegre-downloader
+python downloader.py -d ~/Videos/hegre https://www.hegre.com/films/title-of-the-film
+```
+
+## ⚠️ Notes on the current site (2026)
+- hegre.com no longer shows the upload date on movie/gallery pages. If no date is found, files are saved directly in the destination folder (no year subfolder) and the filename starts with the ID instead of the date, e.g. `1162-title-of-the-film-2160p.mp4`.
+- Without an active subscription the site only offers trailers. The tool detects this and reports an error instead of saving the trailer as the movie.
+- Errors (also in parallel mode, `-p`) are listed at the end and the tool exits with code 1 if anything failed.
 
 ## 🧑‍💻 Usage as CLI tool
 ```
-usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [-p NUM_OF_TASKS] [--sort SORT] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] URL [URL ...]
+usage: downloader [-h] -d PATH [-r HEIGHT_IN_PX] [-p NUM_OF_TASKS] [--sort {most_recent,most_viewed,top_rated,vintage}] [--retries RETRIES] [--no-thumb] [--no-meta] [--no-subtitles] [--no-download] [--subtitles SUBTITLES] [--screengrabs] [--trailer] URL [URL ...]
 
 Downloader and metadata extractor for hegre.com
 
@@ -53,18 +63,20 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   -d PATH               Destination folder
-  -r HEIGHT_IN_PX       Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.
+  -r HEIGHT_IN_PX       Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selected.
   -p NUM_OF_TASKS       Number of parallel tasks. Defaults to 1.
-  --sort SORT           Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated'.
+  --sort SORT           Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated' and 'vintage' (galleries only).
   --retries RETRIES     Number of retries for failed downloads. Defaults to 2. Set to 0 to disable retries.
   --no-thumb            Do not download thumbnails
   --no-meta             Do not create metadata file
   --no-subtitles        Do not download subtitles
   --no-download         Do not download the actual file (movie or gallery)
   --subtitles SUBTITLES
-                        Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple langauges must separated by comma (e.g. 'english,german,japanese').
+                        Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple languages must be separated by comma (e.g. 'english,german,japanese').
   --screengrabs         Download screengrabs
   --trailer             Download trailer
+  --download-archive FILE
+                        Download only videos/galleries not listed in the archive file. Record the IDs of all downloaded videos/galleries in it
 ```
 
 ## 📖 Usage as library
@@ -84,9 +96,6 @@ pre-commit install
 - Custom filenames with format strings
 - Separation between resolution of galleries (`px`) and movies (`p`) (`-r` flag)
 - Subtitle files should match the schema `{movie_name}.{language_code}.ext`
-- More robustness on errors (e.g. HTTP 404)
-- Exit gracefully on SIGINT (`Ctrl+C`)
 - Load configration via dynaconf (what should be a parameter, what should be loaded via file (only secrets?))
 - Logout (end session)
 - Documentation
-- Unit testing

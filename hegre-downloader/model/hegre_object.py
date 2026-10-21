@@ -1,7 +1,10 @@
 from typing import Optional
-from datetime import date
+from datetime import date, datetime
 import json
 import os
+import re
+
+from bs4 import BeautifulSoup
 
 from model.object_type import ObjectType
 from hegre_json_encoder import HegreJSONEncoder
@@ -53,5 +56,48 @@ class HegreObject:
     def write_metadata_file(self, destination_folder: str, filename: str) -> None:
         metadata_file = os.path.join(destination_folder, filename)
 
-        with open(metadata_file, "w") as file:
-            file.write(json.dumps(self, sort_keys=True, indent=4, cls=HegreJSONEncoder))
+        with open(metadata_file, "w", encoding="utf-8") as file:
+            file.write(
+                json.dumps(
+                    self,
+                    sort_keys=True,
+                    indent=4,
+                    ensure_ascii=False,
+                    cls=HegreJSONEncoder,
+                )
+            )
+
+
+DATE_FORMATS = ("%B %d, %Y", "%b %d, %Y", "%d %B %Y", "%Y-%m-%d")
+
+
+def parse_date(page: BeautifulSoup) -> Optional[date]:
+    """Returns the upload date of a movie/gallery page or None if it is not shown"""
+    for element in page.select(".date, time[datetime]"):
+        if iso_date := element.attrs.get("datetime"):
+            text = iso_date[:10]  # strip time, e.g. "2024-05-01T12:00:00Z"
+        else:
+            text = " ".join(element.text.split())
+
+        for date_format in DATE_FORMATS:
+            try:
+                return datetime.strptime(text, date_format).date()
+            except ValueError:
+                pass
+
+    return None
+
+
+def parse_models(page: BeautifulSoup) -> list[HegreModel]:
+    models = []
+
+    for model in page.select(".record-model"):
+        url = "https://www.hegre.com" + model.attrs["href"]
+        name = model.attrs.get("title") or model.text.strip()
+        models.append(HegreModel(name, url))
+
+    return models
+
+
+def parse_tags(page: BeautifulSoup) -> list[str]:
+    return [tag.text.strip().title() for tag in page.select(".approved-tags > .tag")]

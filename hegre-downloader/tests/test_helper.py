@@ -1,4 +1,4 @@
-from helper import duration_to_seconds, convert_size
+from helper import duration_to_seconds, convert_size, strip_query, extract_css_url
 import pytest
 
 
@@ -72,3 +72,28 @@ def test_convert_size():
     assert convert_size(mbytes) == expected_mb_string, "Byte to MiB"
     assert convert_size(gbytes) == expected_gb_string, "Byte to GiB"
     assert convert_size(tbytes) == expected_tb_string, "Byte to TiB"
+
+
+def test_strip_query():
+    """Test removal of URL parameters, also for URLs that have none"""
+    assert (
+        strip_query("https://hegre.tld/a/file.mp4?v=1&d=x")
+        == "https://hegre.tld/a/file.mp4"
+    )
+    assert strip_query("https://hegre.tld/a/file.zip") == "https://hegre.tld/a/file.zip"
+
+
+def test_extract_css_url():
+    """Test extraction of URLs from quoted and unquoted CSS url() expressions"""
+    expected = "https://hegre.tld/image.jpg"
+
+    assert (
+        extract_css_url("background-image: url('https://hegre.tld/image.jpg?v=1')")
+        == expected
+    )
+    assert (
+        extract_css_url("background-image: url(https://hegre.tld/image.jpg)")
+        == expected
+    )
+    assert extract_css_url("color: red") is None
+    assert extract_css_url(None) is None

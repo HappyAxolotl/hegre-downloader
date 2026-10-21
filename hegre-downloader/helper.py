@@ -1,4 +1,8 @@
 import math
+import re
+
+from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 
 
 def duration_to_seconds(duration: str, delimiter: str = ":") -> int:
@@ -45,3 +49,31 @@ def convert_size(size_bytes: int) -> str:
     s = round(size_bytes / p, 2)
 
     return "%s %s" % (s, size_name[i])
+
+
+def strip_query(url: str) -> str:
+    """Removes query string and fragment from a URL
+
+    Args:
+        url (str): URL, e.g. "https://host/file.mp4?v=123"
+
+    Returns:
+        str: URL without parameters, e.g. "https://host/file.mp4"
+    """
+    parts = urlsplit(url.strip())
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+
+
+def extract_css_url(style: Optional[str]) -> Optional[str]:
+    """Extracts the (parameterless) URL of a CSS `url(...)` expression
+
+    Args:
+        style (Optional[str]): Inline style, e.g. "background-image: url('https://...')"
+
+    Returns:
+        Optional[str]: URL without parameters or None if no URL was found
+    """
+    if style and (match := re.search(r"url\(\s*['\"]?(https?://[^'\")\s]+)", style)):
+        return strip_query(match.group(1))
+
+    return None

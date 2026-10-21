@@ -3,6 +3,7 @@ import re
 import sys
 import argparse
 import pathlib
+import threading
 
 from hegre import Hegre
 from model.movie import HegreMovie
@@ -14,10 +15,11 @@ from configuration import Configuration
 from dotenv import load_dotenv
 from rich.progress import Progress
 from rich.console import Console
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DOWNLOAD_TASK_PREFIX = "[{:>4} / {:>4}] "
 archive: set[str] = set()
+archive_lock = threading.Lock()
 
 
 def load_config_from_args() -> Configuration:
@@ -59,7 +61,7 @@ You can specify one or more URLs that will be downloaded. The following URLs are
     parser.add_argument(
         "-r",
         metavar="HEIGHT_IN_PX",
-        help="Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selcetd.",
+        help="Preferred resolution for movies (height in pixels, e.g. 480, 2160). If this argument is omitted or the requested resolution is not available, the highest available resolution is selected.",
         type=int,
         action="store",
     )
@@ -73,8 +75,10 @@ You can specify one or more URLs that will be downloaded. The following URLs are
     )
     parser.add_argument(
         "--sort",
-        help="Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated'.",
+        help="Sorting when downloading all movies/galleries. Defaults to 'most_recent'. Valid values are 'most_recent', 'most_viewed', 'top_rated' and 'vintage' (galleries only).",
         action="store",
+        type=SortOption,
+        choices=list(SortOption),
         default=SortOption.MOST_RECENT,
     )
     parser.add_argument(
@@ -110,7 +114,7 @@ You can specify one or more URLs that will be downloaded. The following URLs are
     )
     parser.add_argument(
         "--subtitles",
-        help="Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple langauges must separated by comma (e.g. 'english,german,japanese').",
+        help="Language(s) of subtitles that should be downloaded. Will only download available languages. Defaults to 'english'. Multiple languages must be separated by comma (e.g. 'english,german,japanese').",
         action="store",
         default="english",
     )
@@ -119,6 +123,12 @@ You can specify one or more URLs that will be downloaded. The following URLs are
     )
     parser.add_argument(
         "--trailer", help="Download trailer", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--trailers-only",
+        help="Only download trailers (plus thumbnail and metadata). No account needed, galleries are skipped",
+        action="store_true",
+        default=False,
     )
     parser.add_argument(
         "--download-archive",
@@ -148,10 +158,11 @@ You can specify one or more URLs that will be downloaded. The following URLs are
         args.sort,
         no_thumb=args.no_thumb,
         no_meta=args.no_meta,
-        no_subtitles=args.no_subtitles,
-        no_download=args.no_download,
+        no_subtitles=args.no_subtitles or args.trailers_only,
+        no_download=args.no_download or args.trailers_only,
         screengrabs=args.screengrabs,
-        trailer=args.trailer,
+        trailer=args.trailer or args.trailers_only,
+        trailers_only=args.trailers_only,
         resolution=args.r,
         subtitles=subtitles,
         download_archive=args.download_archive,
@@ -169,32 +180,40 @@ def login() -> None:
         sys.exit(1)
 
 
-def download_urls(urls: list[str], configuration: Configuration) -> None:
+def download_urls(urls: list[str], configuration: Configuration) -> int:
+    """Downloads all URLs and returns the number of failed downloads"""
     if not urls:
-        return
+        return 0
+
+    failed = 0
 
     with Progress() as progress:
-        if configuration.parallel_tasks > 1:
-            with ThreadPoolExecutor(max_workers=configuration.parallel_tasks) as pool:
-                for count, url in enumerate(urls):
-                    try:
-                        pool.submit(
-                            download_url,
-                            url,
-                            configuration,
-                            DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
-                            progress,
-                        )
-                    except HegreError as e:
-                        progress.console.print(f"[red] Error downloading {url}: {e}")
-        else:
-            for count, url in enumerate(urls):
-                download_url(
+        with ThreadPoolExecutor(
+            max_workers=max(1, configuration.parallel_tasks)
+        ) as pool:
+            futures = {
+                pool.submit(
+                    download_url,
                     url,
                     configuration,
                     DOWNLOAD_TASK_PREFIX.format(count + 1, len(urls)),
                     progress,
-                )
+                ): url
+                for count, url in enumerate(urls)
+            }
+
+            try:
+                for future in as_completed(futures):
+                    try:
+                        future.result()
+                    except HegreError as e:
+                        failed += 1
+                        progress.console.print(f"[red]:x: {futures[future]}: {e}")
+            except KeyboardInterrupt:
+                pool.shutdown(wait=False, cancel_futures=True)
+                raise
+
+    return failed
 
 
 def download_url(
@@ -203,7 +222,7 @@ def download_url(
     if re.match(r"^https?:\/\/www\.hegre\.com\/(films|massage|sexed|orgasms)\/", url):
         movie = hegre.get_movie_from_url(url)
         if movie.archive_id() in archive:
-            console.print(
+            progress.console.print(
                 f"Movie '{movie.title}' [{movie.code}] has already been recorded in the archive"
             )
         else:
@@ -212,9 +231,13 @@ def download_url(
             )
             record_download_archive(configuration, movie)
     elif re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
+        if configuration.trailers_only:
+            progress.console.print(f"{task_prefix}Skipping gallery {url} (no trailer)")
+            return
+
         gallery = hegre.get_gallery_from_url(url)
         if gallery.archive_id() in archive:
-            console.print(
+            progress.console.print(
                 f"Gallery '{gallery.title}' [{gallery.code}] has already been recorded in the archive"
             )
         else:
@@ -248,10 +271,13 @@ def record_download_archive(
 
     id = hegre_object.archive_id()
 
-    with open(configuration.download_archive, "a", encoding="utf-8") as archive_file:
-        archive_file.write(id + "\n")
+    with archive_lock:
+        with open(
+            configuration.download_archive, "a", encoding="utf-8"
+        ) as archive_file:
+            archive_file.write(id + "\n")
 
-    archive.add(id)
+        archive.add(id)
 
 
 if __name__ == "__main__":
@@ -264,17 +290,36 @@ if __name__ == "__main__":
     username = os.environ.get("username")
     password = os.environ.get("password")
 
-    if not username or not password:
+    hegre = Hegre()
+
+    if configuration.trailers_only:
+        console.print("Trailers only, no login needed")
+    elif not username or not password:
         console.print("[red]Please provide username and password!")
         sys.exit(1)
+    else:
+        login()
 
-    hegre = Hegre()
-    login()
+    failed = 0
+    try:
+        for url in configuration.urls:
+            console.print(f"Downloading {url}:")
+            try:
+                urls = hegre.resolve_urls(
+                    url, sort=configuration.sort, show_progress=True
+                )
+                failed += download_urls(urls, configuration)
+            except HegreError as e:
+                failed += 1
+                console.print(f"[red]:x: {e}")
+    except KeyboardInterrupt:
+        console.print(
+            "[yellow]Interrupted, unfinished downloads are left as .temp files"
+        )
+        sys.exit(130)
+    finally:
+        hegre.close()
 
-    for url in configuration.urls:
-        console.print(f"Downloading {url}:")
-        try:
-            urls = hegre.resolve_urls(url, sort=configuration.sort, show_progress=True)
-            download_urls(urls, configuration)
-        except HegreError as e:
-            console.print(f"[red]:x: {e}")
+    if failed:
+        console.print(f"[red]{failed} download(s) failed")
+        sys.exit(1)

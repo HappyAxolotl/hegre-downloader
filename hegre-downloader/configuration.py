@@ -17,6 +17,7 @@ class Configuration:
     no_download: bool
     screengrabs: bool
     trailer: bool
+    trailers_only: bool
 
     resolution: Optional[int]
     subtitles: Optional[list[str]]
@@ -35,6 +36,7 @@ class Configuration:
         no_download: bool = False,
         screengrabs: bool = False,
         trailer: bool = False,
+        trailers_only: bool = False,
         resolution: Optional[int] = None,
         subtitles: Optional[list[str]] = None,
         download_archive: Optional[str] = None,
@@ -51,6 +53,7 @@ class Configuration:
         self.no_download = no_download
         self.screengrabs = screengrabs
         self.trailer = trailer
+        self.trailers_only = trailers_only
 
         self.resolution = resolution
         self.subtitles = subtitles

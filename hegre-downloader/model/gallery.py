@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime
 import re
 
 from bs4 import BeautifulSoup
 
 from model.object_type import ObjectType
-from model.model import HegreModel
-from model.hegre_object import HegreObject
+from model.hegre_object import HegreObject, parse_date, parse_models, parse_tags
+from helper import strip_query, extract_css_url
 from exceptions import HegreError
 
 
@@ -29,44 +28,34 @@ class HegreGallery(HegreObject):
     def from_gallery_page(url: str, gallery_page: BeautifulSoup) -> HegreGallery:
         hg = HegreGallery(url)
 
-        if re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
+        if not re.match(r"^https?:\/\/www\.hegre\.com\/photos\/", url):
+            raise HegreError(f"Unsupported gallery URL {url}")
+
+        try:
             hg._parse_details_from_gallery_page(gallery_page)
-        else:
-            raise HegreError(f"Unsupported gallry URL {url}")
+        except (AttributeError, KeyError, ValueError) as e:
+            raise HegreError(
+                f"Could not parse gallery page {url} (the site layout may have changed): {e!r}"
+            ) from e
 
         return hg
 
     def _parse_details_from_gallery_page(self, gallery_page: BeautifulSoup) -> None:
         self.title = gallery_page.select_one("h1.translated-text").text.strip()
         self.code = int(gallery_page.select_one(".comments-wrapper").attrs["data-id"])
-        self.date = datetime.strptime(
-            gallery_page.select_one(".date").text, "%B %d, %Y"
-        ).date()
+        # the upload date is no longer shown on the public page, so it may be missing
+        self.date = parse_date(gallery_page)
 
-        # models
-        models = gallery_page.select(".record-model")
-        for model in models:
-            url = "https://www.hegre.com" + model.attrs["href"]
-            name = model.attrs["title"]
-            self.models.append(HegreModel(name, url))
-
-        # tags
-        tags = gallery_page.select(".approved-tags > .tag")
-        for tag in tags:
-            self.tags.append(tag.text.strip().title())
+        self.models = parse_models(gallery_page)
+        self.tags = parse_tags(gallery_page)
 
         # downloads
         links = gallery_page.select(".gallery-zips > .members-only")
         for link in links:
-            url = link.attrs["href"]
-            url = re.search(r"(http.*)\?", url).group(1)  # remove all parameters
-            px = int(re.search(r"-(\d{4,5})px", url).group(1))
-
-            self.downloads.setdefault(px, url)
+            url = strip_query(link.attrs["href"])
+            if px_match := re.search(r"-(\d{3,5})px", url):
+                self.downloads.setdefault(int(px_match.group(1)), url)
 
         # cover image
-        bg_image_url = gallery_page.select_one(".record-content > .non-members").attrs[
-            "style"
-        ]
-        if url_result := re.search(r"(http.*)\?", bg_image_url):
-            self.cover_url = url_result.group(1)
+        if cover := gallery_page.select_one(".record-content > .non-members"):
+            self.cover_url = extract_css_url(cover.attrs.get("style"))
